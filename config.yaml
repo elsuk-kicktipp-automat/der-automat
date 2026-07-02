@@ -1,0 +1,25 @@
+# Konfiguration für "Der Automat" – Phase 1
+league: bl1 # OpenLigaDB-Kürzel: bl1 = 1. Bundesliga
+
+kicktipp:
+  # Punkteschema der Runde (Standard: 4/3/2)
+  points:
+    exact: 4     # exaktes Ergebnis
+    goal_diff: 3 # richtige Tordifferenz (inkl. falsches Unentschieden, z.B. 1:1 statt 2:2)
+    tendency: 2  # richtige Tendenz (Sieger richtig, Differenz falsch)
+
+model:
+  # Zeitgewichtung: Gewicht = exp(-xi * Tage seit Spiel). 0.002/Tag ≈ Halbwertszeit ~1 Jahr.
+  time_decay_xi: 0.002
+  # L2-Regularisierung der Team-Parameter (hält Teams mit wenig Daten nahe am Ligaschnitt)
+  l2_penalty: 0.1
+  # Tor-Raster der Wahrscheinlichkeitsmatrix: 0..max_goals
+  max_goals: 8
+  # Kandidaten-Tipps: 0..max_tip_goals pro Team
+  max_tip_goals: 5
+
+backtest:
+  # OpenLigaDB-Saisonschlüssel = Jahr des Saisonstarts (2025 = Saison 2025/26)
+  seasons: [2023, 2024, 2025]
+  # So viele Vorsaisons fließen zusätzlich als Trainingsdaten ein
+  lookback_seasons: 2

@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# Secrets & lokale Umgebung
+.env
+
+# API-Cache (Rohdaten, jederzeit neu abrufbar)
+data/cache/*.json
+
+# macOS
+.DS_Store
