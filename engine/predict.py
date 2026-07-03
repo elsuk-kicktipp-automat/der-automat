@@ -6,11 +6,14 @@ Modellversion und Eingangsfaktoren nach data/predictions/.
 """
 
 import json
+import os
 from datetime import datetime, timedelta, timezone
 
 import numpy as np
 
-from .config import MATCHDAYS_DIR, PREDICTIONS_DIR, PROJECT_ROOT
+from . import llm
+from .config import MATCHDAYS_DIR, PREDICTIONS_DIR, PROJECT_ROOT, load_dotenv
+from .market import blend_with_market
 from .model import DixonColes
 from .optimizer import (
     ALWAYS_DRAW_TIP,
@@ -20,10 +23,11 @@ from .optimizer import (
     penalty_shootout_favorite,
 )
 from .sources.elo import make_elo_source
+from .sources.odds import load_probabilities as load_odds_probabilities
 from .sources.openligadb import Match, fetch_competition
 from .teams import is_knockout_stage
 
-MODEL_VERSION = "dixon-coles-elo-1"
+MODEL_VERSION = "dixon-coles-elo-2-market-llm"
 
 
 def outcome_probabilities(matrix: np.ndarray) -> dict[str, float]:
@@ -33,6 +37,31 @@ def outcome_probabilities(matrix: np.ndarray) -> dict[str, float]:
         "draw": float(np.trace(matrix)),
         "away": float(np.triu(matrix, 1).sum()),
     }
+
+
+def marginal_expected_goals(matrix: np.ndarray) -> tuple[float, float]:
+    """Erwartete Tore aus den Randverteilungen der Matrix – bleibt korrekt,
+    auch nachdem die Matrix per Marktquote nachjustiert wurde."""
+    size = matrix.shape[0]
+    goals = np.arange(size)
+    lam = float((matrix.sum(axis=1) * goals).sum())
+    mu = float((matrix.sum(axis=0) * goals).sum())
+    return lam, mu
+
+
+def load_odds(config: dict, on_date=None) -> dict[tuple[str, str], dict[str, float]]:
+    odds_cfg = config.get("odds", {})
+    if not odds_cfg.get("enabled"):
+        return {}
+    load_dotenv()
+    api_key = os.environ.get("ODDS_API_KEY")
+    if not api_key:
+        print("ODDS_API_KEY fehlt, laufe ohne Quoten-Prior.")
+        return {}
+    cache_tag = (on_date or datetime.now(timezone.utc).date()).isoformat()
+    return load_odds_probabilities(
+        api_key, odds_cfg["sport_key"], odds_cfg.get("regions", "eu"), cache_tag=cache_tag
+    )
 
 
 def build_begruendung(
@@ -89,7 +118,13 @@ def load_elo(config: dict, team_type: str, on_date=None) -> dict[str, float] | N
 
 
 def predict_matches(
-    config: dict, targets: list[Match], train: list[Match], neutral_venue: bool, team_type: str
+    config: dict,
+    targets: list[Match],
+    train: list[Match],
+    neutral_venue: bool,
+    team_type: str,
+    odds: dict[tuple[str, str], dict[str, float]] | None = None,
+    groq_api_key: str | None = None,
 ) -> list[dict]:
     """Tipps für die Zielspiele; Modell wird auf den Trainingsspielen gefittet."""
     ref_date = min(m.kickoff_utc for m in targets)
@@ -99,11 +134,20 @@ def predict_matches(
 
     scheme = config["kicktipp"]["points"]
     max_tip = config["model"]["max_tip_goals"]
+    market_weight = config.get("odds", {}).get("market_weight", 0.0)
+    llm_cfg = config.get("llm", {})
+    llm_model = llm_cfg.get("model", llm.DEFAULT_MODEL)
+
     predictions = []
     for m in sorted(targets, key=lambda t: (t.kickoff_utc, t.home_name)):
         matrix = model.score_matrix(m.home_key, m.away_key)
+
+        market_probs = (odds or {}).get((m.home_key, m.away_key))
+        if market_probs is not None and market_weight > 0:
+            matrix = blend_with_market(model, m.home_key, m.away_key, market_probs, market_weight)
+
         tip, ev = best_tip(matrix, scheme, max_tip)
-        lam, mu = model.expected_goals(m.home_key, m.away_key)
+        lam, mu = marginal_expected_goals(matrix)
         probs = outcome_probabilities(matrix)
 
         advance_tip = None
@@ -113,6 +157,21 @@ def predict_matches(
                 "pick": m.home_name if side == "home" else m.away_name,
                 "probability": round(p, 3),
             }
+
+        template_text = build_begruendung(m, lam, mu, probs, tip, ev, advance_tip)
+        begruendung, source = template_text, "template"
+        if llm_cfg.get("enabled"):
+            context = {
+                "home": m.home_name,
+                "away": m.away_name,
+                "stage": m.stage_name,
+                "probabilities": probs,
+                "expected_goals": (lam, mu),
+                "tip": tip,
+                "market_probabilities": market_probs,
+            }
+            llm_text, source = llm.generate_begruendung(context, groq_api_key, llm_model)
+            begruendung = llm_text or template_text
 
         predictions.append(
             {
@@ -143,10 +202,20 @@ def predict_matches(
                         "away": (elo or {}).get(m.away_key),
                         "beta": round(model.params.elo_beta, 4),
                     },
+                    # Marktquote (entvigt) und Blend-Gewicht, nur wenn eine
+                    # Quote für genau diese Paarung vorlag (siehe engine/market.py)
+                    "market": (
+                        {**{k: round(v, 3) for k, v in market_probs.items()}, "weight": market_weight}
+                        if market_probs is not None
+                        else None
+                    ),
                     "home_advantage": round(model.params.home_adv, 3),
                     "trained_on_matches": len([t for t in train if t.has_result]),
                 },
-                "begruendung": build_begruendung(m, lam, mu, probs, tip, ev, advance_tip),
+                "begruendung": begruendung,
+                # "llm" oder "template" - Transparenz, welche Quelle den Text
+                # geschrieben hat (LLM passt NICHT den Tipp an, siehe engine/llm.py)
+                "begruendung_source": source,
             }
         )
     return predictions
@@ -174,8 +243,12 @@ def run_predict(config: dict) -> dict | None:
         for s in range(season - lookback, season):
             train += [m for m in fetch_competition(config["leagues"], s) if m.has_result]
 
+    load_dotenv()
+    odds = load_odds(config, min(m.kickoff_utc for m in targets).date())
+    groq_api_key = os.environ.get("GROQ_API_KEY")
+
     predictions = predict_matches(
-        config, targets, train, config["neutral_venue"], config["team_type"]
+        config, targets, train, config["neutral_venue"], config["team_type"], odds, groq_api_key
     )
     return {
         "competition": config["competition"],

@@ -3,12 +3,13 @@
 Ein selbstlernender KI-Tipper für die Kicktipp-Runde. Konzept: siehe [concept.md](concept.md).
 Website: **<https://elsuk-kicktipp-automat.github.io/der-automat/>**
 
-**Stand: Phase 2** – Statistik-Engine (OpenLigaDB + ELO, Dixon-Coles-Modell,
-Kicktipp-Punkteoptimierung, Backtesting) plus Astro-Website, Hash-Versiegelung
-und GitHub-Actions-Automatisierung. Die Pipeline läuft im Test-/Härtungsbetrieb
-mit der **WM 2026** (bis 19.07.2026), danach wird per `config.yaml` auf die
-Bundesliga 2026/27 umgestellt. Eine Kicktipp-Runde ist dafür nicht nötig –
-die Punkte rechnet die Engine selbst ab; die Abgabe bei kicktipp.de ist Phase 4.
+**Stand: Phase 2+3 (teilweise)** – Statistik-Engine (OpenLigaDB + ELO + Quoten,
+Dixon-Coles-Modell, Kicktipp-Punkteoptimierung, Backtesting), LLM-Begründungsschicht
+(Groq), Astro-Website, Hash-Versiegelung und GitHub-Actions-Automatisierung. Die
+Pipeline läuft im Test-/Härtungsbetrieb mit der **WM 2026** (bis 19.07.2026), danach
+wird per `config.yaml` auf die Bundesliga 2026/27 umgestellt. Eine Kicktipp-Runde ist
+dafür nicht nötig – die Punkte rechnet die Engine selbst ab; die Abgabe bei kicktipp.de
+ist Phase 4.
 
 ## Wie es funktioniert
 
@@ -34,6 +35,20 @@ die Punkte rechnet die Engine selbst ab; die Abgabe bei kicktipp.de ist Phase 4.
 5. **K.o.-Spiele:** Gewertet wird das Ergebnis nach 90 Minuten (OpenLigaDB
    resultTypeID 2, bei der WM „Endergebniss (o.E.)" = ohne Elfmeterschießen) –
    ein Unentschieden ist ein gültiger und tippbarer Ausgang.
+6. **Quoten-Prior:** [The Odds API](https://the-odds-api.com) (Free Tier, 500
+   Requests/Monat). Anders als ELO gibt es hier keinen historischen Endpunkt –
+   Quoten fließen deshalb nicht ins Fitting, sondern verschieben zur
+   Vorhersagezeit die fertige Wahrscheinlichkeitsmatrix Richtung Markt
+   (`engine/market.py`, Gewicht konfigurierbar über `odds.market_weight`).
+   Ergebnis wird auf einen Blend aus Markt- und Modellmeinung optimiert, die
+   relative Form (Dixon-Coles-rho) bleibt vom Modell bestimmt. Cache pro
+   Kalendertag hält den Verbrauch weit unter dem Freikontingent.
+7. **LLM-Begründung:** [Groq](https://console.groq.com) (Free Tier,
+   `llama-3.3-70b-versatile`) formuliert den Begründungstext aus denselben
+   Modellzahlen in natürlicher Sprache; ohne Key/Netzwerk springt automatisch
+   die Template-Begründung ein. Passt **nicht** den Tipp an – eine begründete
+   Anpassung bräuchte eine echte News-Quelle (Verletzungen, Sperren), die es
+   noch nicht gibt.
 
 ## Setup
 
@@ -163,16 +178,19 @@ engine/                Python-Engine
   evaluate.py          Punkteabrechnung -> data/results/
   backtest.py          Backtests (club + national) -> data/backtests/
   model.py             Dixon-Coles-Poisson mit ELO-Term
+  market.py            Quoten-Blending der Wahrscheinlichkeitsmatrix (Vorhersagezeit)
+  llm.py               LLM-Begründungstexte (Groq) mit Template-Fallback
   optimizer.py         Kicktipp-Punktelogik + EV-Optimierung + Baselines
   teams.py             Team-Identität über normalisierte Namen
   sources/
     openligadb.py      Spielplan/Ergebnisse mit Cache
     elo.py             ELO-Adapter (clubelo.com | eloratings.net)
+    odds.py            Quoten-Adapter (The Odds API) mit Cache + Entviggen
 tests/                 pytest-Suite (ohne Netzwerkzugriff lauffähig)
 data/                  JSON-„Datenbank" (cache/ ist gitignored)
   matchdays/           öffentliche Spieltags-Dateien (Hashes bzw. Enthülltes)
   sealed/              verschlüsselte Klartext-Tipps bis zum Anstoß
-  mappings/            Namens-Zuordnung OpenLigaDB -> ELO-Quellen
+  mappings/            Namens-Zuordnung OpenLigaDB -> ELO-/Quoten-Quellen
 site/                  Astro-Website (GitHub Pages)
 .github/workflows/     GitHub Actions (Spieltag, Entsiegeln, Site-Deploy)
 config.yaml            Wettbewerb, Punkteschema, Modell- und Backtest-Parameter
@@ -185,6 +203,8 @@ config.yaml            Wettbewerb, Punkteschema, Modell- und Backtest-Parameter
       Backtesting, WM-2026-Testbetrieb
 - [x] **Phase 2:** Astro-Site, Hash-Versiegelung, GitHub-Actions-Betrieb,
       Deployment auf Pages
-- [ ] **Phase 3:** LLM-Schicht (Dossier, Adjustierung, Begründungen)
+- [x] **Phase 3 (teilweise):** Quoten-Prior (The Odds API), LLM-Begründungstexte
+      (Groq). Offen: News-Dossier (Verletzungen/Sperren) und darauf gestützte
+      Tipp-Adjustierung – ohne echte News-Quelle wäre das nur geraten
 - [ ] **Phase 4:** Kicktipp-Bot (Playwright-Abgabe)
 - [ ] **Phase 5:** Selbstlernen, Schattentipper, Dashboard

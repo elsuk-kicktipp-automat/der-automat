@@ -6,6 +6,7 @@ const { match, scored, delay = 0 } = Astro.props;
 const sealed = match.status === 'sealed';
 const probs = match.factors?.probabilities;
 const xg = match.factors?.expected_goals;
+const market = match.factors?.market;
 const pointsClass = scored ? `p${scored.points}` : '';
 ---
 
@@ -55,10 +56,22 @@ const pointsClass = scored ? `p${scored.points}` : '';
             <span><i class="dot dot-away"></i> Auswärts {Math.round(probs.away * 100)} %</span>
             <span class="xg">xG {xg[0]} : {xg[1]}</span>
           </div>
+          {market && (
+            <p class="market-line">
+              Buchmacherquote (entvigt, {Math.round(market.weight * 100)} % Gewicht):
+              Heim {Math.round(market.home * 100)} % · Remis {Math.round(market.draw * 100)} % ·
+              Auswärts {Math.round(market.away * 100)} %
+            </p>
+          )}
         </div>
       )}
 
       {match.begruendung && <p class="analysis">{match.begruendung}</p>}
+      {match.begruendung_source === 'llm' && (
+        <p class="source-tag" title="Begründungstext von einem LLM formuliert, nicht der Tipp selbst">
+          🤖 Begründung von der KI-Analyseschicht formuliert
+        </p>
+      )}
 
       {match.salt && match.hash && (
         <details class="reveal-proof">
@@ -182,7 +195,10 @@ const pointsClass = scored ? `p${scored.points}` : '';
   .dot-away { background: var(--red); }
   .xg { margin-left: auto; }
 
+  .market-line { margin: 8px 0 0; font-size: 11.5px; color: var(--text-muted); }
+
   .analysis { margin: 16px 22px 0; font-size: 13.5px; line-height: 1.6; color: var(--text-body); }
+  .source-tag { margin: 8px 22px 0; font-size: 11.5px; color: var(--text-muted); font-style: italic; }
 
   .reveal-proof {
     margin: 14px 22px 0;

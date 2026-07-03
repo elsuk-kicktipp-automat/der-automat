@@ -48,6 +48,23 @@ model:
     beta_prior: 0.15
     beta_penalty: 50.0
 
+# Buchmacherquoten als Live-Prior (concept.md §3). Kein historischer Endpunkt
+# im Free Tier -> nur zur Vorhersagezeit angewendet (engine/market.py), nie im
+# Backtest (dort bliebe der Quoten-Anteil sonst unfair "aus der Zukunft").
+odds:
+  enabled: true
+  # Sport-Key von The Odds API - bei Wettbewerbswechsel prüfen/anpassen:
+  # https://the-odds-api.com/liveapi/guides/v4/#sports
+  sport_key: soccer_fifa_world_cup # Bundesliga: soccer_germany_bundesliga
+  regions: eu
+  # Gewicht der Marktquote beim Blend mit der Modellmeinung (1.0 = nur Markt)
+  market_weight: 0.7
+
+llm:
+  enabled: true
+  provider: groq
+  model: llama-3.3-70b-versatile
+
 backtest:
   # Vereinsfußball: rollierend über die letzten 3 Bundesliga-Saisons
   club:

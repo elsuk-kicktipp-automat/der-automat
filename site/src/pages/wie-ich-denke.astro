@@ -23,6 +23,15 @@ import Layout from '../layouts/Layout.astro';
     (bei Turnieren auf neutralem Platz abgeschaltet) und der ELO-Differenz. Daraus
     entsteht eine vollständige Wahrscheinlichkeitsmatrix aller Ergebnisse von 0:0 bis 6:6.
   </p>
+  <p>
+    Wo verfügbar, rücke ich diese Matrix zusätzlich Richtung Buchmacherquote (entvigt,
+    also um die Buchmacher-Marge bereinigt) – der Markt bündelt das Wissen tausender
+    Wetter und ist als Einzelquelle kaum zu schlagen. Das Modell übernimmt trotzdem die
+    Feinarbeit: <em>welche</em> genaue Tordifferenz innerhalb der Heimsieg-/Remis-/
+    Auswärtssieg-Verteilung am wahrscheinlichsten ist, entscheidet weiterhin Angriffs-
+    und Abwehrstärke. Lag für ein Spiel eine Quote vor, steht sie als kleine Zeile
+    unter den Wahrscheinlichkeitsbalken der Spielkarte.
+  </p>
 
   <h2>3. Der Kicktipp-Trick</h2>
   <p>
@@ -61,9 +70,22 @@ print(hashlib.sha256(payload.encode()).hexdigest())"</pre>
     den Zeitpunkt der Versiegelung.
   </p>
 
-  <h2>5. Was noch kommt</h2>
+  <h2>5. Wer schreibt die Begründungstexte</h2>
   <p>
-    Buchmacherquoten als Prior, eine LLM-Schicht für Kontext (Verletzungen, Sperren,
-    Muss-Siege) und die automatische Abgabe bei Kicktipp – siehe Roadmap im Repo.
+    Die Fließtexte zu jedem Spiel formuliert ein LLM (Llama 3.3 70B über Groq) aus genau
+    den Zahlen, die auch auf der Karte stehen – Modellwahrscheinlichkeiten, erwartete
+    Tore, Quote, der gewählte Tipp. Ein 🤖-Hinweis unter dem Text markiert, wenn das LLM
+    geschrieben hat; ohne Antwort (kein Netzwerk, Rate-Limit) springt automatisch eine
+    Template-Begründung aus denselben Zahlen ein – der Automat bleibt so immer
+    funktionsfähig. Bewusst <em>nicht</em> Teil dieser Schicht: das LLM ändert nie den
+    Tipp selbst. Eine begründete Anpassung (z.B. wegen einer Verletzung) bräuchte eine
+    echte News-Quelle, die es noch nicht gibt – ungestützt zu „korrigieren" wäre nur
+    geraten, nicht analysiert.
+  </p>
+
+  <h2>6. Was noch kommt</h2>
+  <p>
+    Eine News-Anbindung (Verletzungen, Sperren, Muss-Siege) als Grundlage für echte
+    Tipp-Anpassungen und die automatische Abgabe bei Kicktipp – siehe Roadmap im Repo.
   </p>
 </Layout>

@@ -175,9 +175,11 @@ class DixonColes:
         )
         return float(lam), float(mu)
 
-    def score_matrix(self, home_key: str, away_key: str) -> np.ndarray:
-        """Wahrscheinlichkeitsmatrix P[heimtore, gasttore] für 0..max_goals (0:0 bis 6:6)."""
-        lam, mu = self.expected_goals(home_key, away_key)
+    def matrix_from_goals(self, lam: float, mu: float) -> np.ndarray:
+        """Wahrscheinlichkeitsmatrix P[heimtore, gasttore] für gegebene lambda/mu,
+        mit der gefitteten rho-Korrektur (Dixon-Coles) für torarme Ergebnisse.
+        Öffentlich, damit z.B. engine.market Lambda/Mu nachträglich anpassen kann,
+        ohne die rho-Logik zu duplizieren."""
         goals = np.arange(self.max_goals + 1)
         matrix = np.outer(poisson.pmf(goals, lam), poisson.pmf(goals, mu))
 
@@ -188,3 +190,8 @@ class DixonColes:
         matrix[1, 1] *= max(1 - rho, 1e-10)
 
         return matrix / matrix.sum()
+
+    def score_matrix(self, home_key: str, away_key: str) -> np.ndarray:
+        """Wahrscheinlichkeitsmatrix P[heimtore, gasttore] für 0..max_goals (0:0 bis 6:6)."""
+        lam, mu = self.expected_goals(home_key, away_key)
+        return self.matrix_from_goals(lam, mu)
