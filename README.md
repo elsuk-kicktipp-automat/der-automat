@@ -146,7 +146,8 @@ Befunde:
 - `competition` / `leagues` / `season` – aktiver Wettbewerb (WM 2026: zwei Ligen)
 - `team_type` – `club` (clubelo.com) oder `national` (eloratings.net)
 - `neutral_venue` – Heimvorteil abschalten (WM)
-- `kicktipp.points` – Punkteschema der Runde
+- `kicktipp.points` – Punkteschema der Runde; `advance` = Zusatzfrage
+  „Wer kommt weiter?" bei K.o.-Spielen (separat ausgewiesen, 0 = deaktiviert)
 - `model.*` – Zeitgewichtung, Regularisierung, Tor-Raster, ELO-Prior
 - `backtest.*` – Parameter der beiden Backtest-Modi
 
