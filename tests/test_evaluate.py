@@ -1,6 +1,6 @@
 import pytest
 
-from engine.evaluate import evaluate_matchday
+from engine.evaluate import evaluate_matchday, load_manual_results
 
 SCHEME = {"exact": 4, "goal_diff": 3, "tendency": 2}
 
@@ -51,6 +51,17 @@ class TestEvaluateMatchday:
         report = evaluate_matchday(MATCHDAY, results, SCHEME)
         assert report["matches_scored"] == 1
         assert report["matches_open"] == 2
+
+    def test_loads_manual_results(self, tmp_path, monkeypatch):
+        manual_dir = tmp_path / "manual_results"
+        manual_dir.mkdir()
+        (manual_dir / "wm2026_2026_md04.json").write_text(
+            '{"matches":[{"home":"Schweiz","away":"Algerien","result":[2,0]}]}',
+            encoding="utf-8",
+        )
+        monkeypatch.setattr("engine.evaluate.MANUAL_RESULTS_DIR", manual_dir)
+
+        assert load_manual_results() == {("schweiz", "algerien"): (2, 0)}
 
 
 class TestShadowAndCalibration:

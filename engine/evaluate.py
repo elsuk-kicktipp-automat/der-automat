@@ -14,12 +14,30 @@ Zusätzlich (concept.md Schicht 4):
 
 import json
 
-from .config import MATCHDAYS_DIR, PROJECT_ROOT, RESULTS_DIR
+from .config import MANUAL_RESULTS_DIR, MATCHDAYS_DIR, PROJECT_ROOT, RESULTS_DIR
 from .optimizer import ALWAYS_DRAW_TIP, elo_favorite_tip, match_points
 from .sources.openligadb import fetch_competition
 from .teams import normalize
 
 SHADOW_TIPPERS = ("most_probable", "elo_favorite", "always_draw")
+
+
+def load_manual_results() -> dict[tuple[str, str], tuple[int, int]]:
+    """Manuelle Ergebnis-Overrides, falls OpenLigaDB-API einzelne Resultate haengen laesst."""
+    results = {}
+    if not MANUAL_RESULTS_DIR.exists():
+        return results
+
+    for path in sorted(MANUAL_RESULTS_DIR.glob("*.json")):
+        data = json.loads(path.read_text(encoding="utf-8"))
+        matches = data.get("matches", data if isinstance(data, list) else [])
+        for match in matches:
+            result = match.get("result")
+            if not result or len(result) != 2:
+                continue
+            key = (normalize(match["home"]), normalize(match["away"]))
+            results[key] = (int(result[0]), int(result[1]))
+    return results
 
 
 def _shadow_tips(match: dict) -> dict[str, tuple[int, int]]:
@@ -113,6 +131,7 @@ def main(config: dict) -> None:
     results_by_pairing = {
         (m.home_key, m.away_key): (m.home_goals, m.away_goals) for m in finished
     }
+    results_by_pairing.update(load_manual_results())
 
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     for md_file in matchday_files:

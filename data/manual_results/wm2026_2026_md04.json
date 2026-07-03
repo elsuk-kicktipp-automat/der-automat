@@ -1,0 +1,12 @@
+{
+  "source": "OpenLigaDB website manual fallback",
+  "note": "OpenLigaDB API had match 82070 still open while the website showed the final result.",
+  "matches": [
+    {
+      "home": "Schweiz",
+      "away": "Algerien",
+      "kickoff_utc": "2026-07-03T03:00:00Z",
+      "result": [2, 0]
+    }
+  ]
+}

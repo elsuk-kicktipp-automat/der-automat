@@ -4,32 +4,46 @@
   "matchday": 4,
   "stage": "Sechzehntelfinale",
   "model_version": "dixon-coles-elo-1",
-  "points_total": 0,
-  "matches_scored": 0,
-  "matches_open": 4,
+  "points_total": 2,
+  "matches_scored": 1,
+  "matches_open": 3,
   "hits": {
     "exact": 0,
     "goal_diff": 0,
-    "tendency": 0,
+    "tendency": 1,
     "miss": 0
   },
   "shadow_points": {
     "most_probable": 0,
-    "elo_favorite": 0,
+    "elo_favorite": 2,
     "always_draw": 0
   },
   "shadow_matches": {
     "most_probable": 0,
-    "elo_favorite": 0,
-    "always_draw": 0
+    "elo_favorite": 1,
+    "always_draw": 1
   },
-  "brier_avg": null,
+  "brier_avg": 0.3968,
   "matches": [
     {
       "home": "Schweiz",
       "away": "Algerien",
       "kickoff_utc": "2026-07-03T03:00:00Z",
-      "status": "revealed"
+      "status": "revealed",
+      "tip": [
+        2,
+        1
+      ],
+      "result": [
+        2,
+        0
+      ],
+      "points": 2,
+      "shadow_points": {
+        "always_draw": 0,
+        "elo_favorite": 2
+      },
+      "brier": 0.3968
     },
     {
       "home": "Australien",

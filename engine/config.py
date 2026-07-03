@@ -8,6 +8,7 @@ Datenfluss (Fairness-Mechanismus, siehe concept.md §5):
     data/sealed/       Fernet-verschlüsselte Klartext-Tipps (Schlüssel nur als
                        GitHub Actions Secret bzw. lokale .env)
     data/results/      Punkteabrechnung der enthüllten Tipps
+    data/manual_results/ manuelle Ergebnis-Overrides, falls die Quelle hängt
     data/backtests/    Backtest-Reports
     data/cache/        API-Antworten (gitignored)
 """
@@ -26,6 +27,7 @@ PREDICTIONS_DIR = DATA_DIR / "predictions"
 MATCHDAYS_DIR = DATA_DIR / "matchdays"
 SEALED_DIR = DATA_DIR / "sealed"
 RESULTS_DIR = DATA_DIR / "results"
+MANUAL_RESULTS_DIR = DATA_DIR / "manual_results"
 BACKTESTS_DIR = DATA_DIR / "backtests"
 MAPPINGS_DIR = DATA_DIR / "mappings"
 
