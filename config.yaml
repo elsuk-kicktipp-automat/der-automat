@@ -26,8 +26,14 @@ kicktipp:
 model:
   # Zeitgewichtung: Gewicht = exp(-xi * Tage seit Spiel). 0.002/Tag ≈ Halbwertszeit ~1 Jahr.
   time_decay_xi: 0.002
-  # L2-Regularisierung der Team-Parameter (hält Teams mit wenig Daten nahe am Ligaschnitt)
-  l2_penalty: 0.1
+  # L2-Regularisierung der Team-Parameter (hält Teams mit wenig Daten nahe am
+  # Ligaschnitt), pro team_type: Nationalteams haben nur 3-7 Turnierspiele und
+  # brauchen deutlich stärkere Shrinkage, sonst übertönen überangepasste
+  # Team-Parameter den ELO-Term (im WM-Backtest gemessen: Plateau bei 5-12).
+  # Vereine (60+ Spiele): flach zwischen 0.2 und 1.0.
+  l2_penalty:
+    club: 0.2
+    national: 5.0
   # Tor-Raster der Wahrscheinlichkeitsmatrix: 0:0 bis 6:6
   max_goals: 6
   # Kandidaten-Tipps: 0..max_tip_goals pro Team

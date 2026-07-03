@@ -94,7 +94,7 @@ def backtest_club(config: dict) -> dict:
         season_matches = [
             m for m in fetch_competition(cfg["leagues"], season) if m.has_result
         ]
-        model = build_model(config, cfg["neutral_venue"])
+        model = build_model(config, cfg["neutral_venue"], cfg["team_type"])
         matchday_reports = []
         season_details = []
 
@@ -140,7 +140,7 @@ def backtest_national(config: dict) -> dict:
         for m in fetch_competition(cfg["leagues"], cfg["season"], force_refresh=True)
         if m.has_result
     ]
-    model = build_model(config, cfg["neutral_venue"])
+    model = build_model(config, cfg["neutral_venue"], cfg["team_type"])
     round_reports = []
     all_details = []
 

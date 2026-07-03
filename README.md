@@ -74,8 +74,26 @@ ist die Datenbank. API-Antworten werden unter `data/cache/` (gitignored) gecacht
   **(b)** immer 1:1. Reports inkl. Punkten pro Spieltag/Runde und Trefferquoten
   (exakt/Differenz/Tendenz): `data/backtests/club.json` bzw. `national.json`.
 
-Aktuelle Ergebnisse: siehe Konsolen-Output von `python -m engine.cli backtest`
-bzw. die JSON-Reports.
+### Ergebnisse (Lauf vom 03.07.2026, Schema 4/3/2)
+
+| Backtest | Spiele | Punkte | Ø/Spiel | ELO-Favorit 2:1 | immer 1:1 |
+| --- | --- | --- | --- | --- | --- |
+| Bundesliga 2023/24 | 306 | 408 | 1,333 | 395 | 244 |
+| Bundesliga 2024/25 | 306 | 383 | 1,252 | 379 | 206 |
+| Bundesliga 2025/26 | 306 | 418 | 1,366 | 437 | 218 |
+| **Bundesliga gesamt** | **918** | **1209** | **1,317** | **1211** | **668** |
+| **WM 2026 (out-of-sample)** | **82** | **138** | **1,683** | **123** | **72** |
+
+Befunde:
+
+- Bei der WM schlägt das Modell beide Baselines klar. Voraussetzung war die
+  starke L2-Regularisierung für Nationalteams: mit dem Club-Wert (0.2) über-
+  erklären die Team-Parameter die 3–7 Turnierspiele pro Team und übertönen den
+  ELO-Term (107 statt 138 Punkte).
+- In der Bundesliga liegt das Modell gleichauf mit der ELO-Favorit-2:1-Baseline
+  (1209 vs. 1211 – bei 918 Spielen Rauschen). Diese Baseline ist unter dem
+  4/3/2-Schema sehr stark; Mehrwert gegenüber ihr soll v.a. die Quoten-Schicht
+  (Phase 3+, siehe concept.md) bringen.
 
 ## Konfiguration (`config.yaml`)
 

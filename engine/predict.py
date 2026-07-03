@@ -49,11 +49,18 @@ def build_begruendung(m: Match, lam: float, mu: float, probs: dict, tip: tuple, 
     )
 
 
-def build_model(config: dict, neutral_venue: bool) -> DixonColes:
+def resolve_l2_penalty(model_cfg: dict, team_type: str) -> float:
+    """l2_penalty ist pro team_type konfigurierbar (Nationalteams haben nur
+    wenige Turnierspiele und brauchen deutlich stärkere Shrinkage)."""
+    l2 = model_cfg["l2_penalty"]
+    return l2[team_type] if isinstance(l2, dict) else l2
+
+
+def build_model(config: dict, neutral_venue: bool, team_type: str) -> DixonColes:
     model_cfg = config["model"]
     return DixonColes(
         xi=model_cfg["time_decay_xi"],
-        l2_penalty=model_cfg["l2_penalty"],
+        l2_penalty=resolve_l2_penalty(model_cfg, team_type),
         max_goals=model_cfg["max_goals"],
         neutral_venue=neutral_venue,
         elo_beta_prior=model_cfg["elo"]["beta_prior"],
@@ -73,7 +80,7 @@ def predict_matches(
     """Tipps für die Zielspiele; Modell wird auf den Trainingsspielen gefittet."""
     ref_date = min(m.kickoff_utc for m in targets)
     elo = load_elo(config, team_type, ref_date.date())
-    model = build_model(config, neutral_venue)
+    model = build_model(config, neutral_venue, team_type)
     model.fit(train, ref_date, elo=elo)
 
     scheme = config["kicktipp"]["points"]

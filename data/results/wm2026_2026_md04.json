@@ -1,0 +1,150 @@
+{
+  "competition": "wm2026",
+  "season": 2026,
+  "matchday": 4,
+  "stage": "Sechzehntelfinale",
+  "model_version": "dixon-coles-elo-1",
+  "points_total": 0,
+  "matches_scored": 0,
+  "matches_open": 4,
+  "hits": {
+    "exact": 0,
+    "goal_diff": 0,
+    "tendency": 0,
+    "miss": 0
+  },
+  "matches": [
+    {
+      "home": "Schweiz",
+      "away": "Algerien",
+      "kickoff_utc": "2026-07-03T03:00:00Z",
+      "matchday": 4,
+      "stage": "Sechzehntelfinale",
+      "tip": [
+        2,
+        1
+      ],
+      "expected_points": 1.279,
+      "factors": {
+        "expected_goals": [
+          1.73,
+          1.09
+        ],
+        "probabilities": {
+          "home": 0.489,
+          "draw": 0.306,
+          "away": 0.205
+        },
+        "elo": {
+          "home": 1914.0,
+          "away": 1785.0,
+          "beta": 0.2042
+        },
+        "home_advantage": 0.0,
+        "trained_on_matches": 82
+      },
+      "begruendung": "Das Modell sieht Schweiz vorn (Heimsieg 49%, Remis 31%, Auswärtssieg 20%) und erwartet im Schnitt 1.7:1.1 Tore. Der Tipp 2:1 maximiert den Punkte-Erwartungswert (1.28 Punkte) über alle möglichen Ergebnisse – nicht die Trefferchance auf das exakte Resultat.",
+      "result": null,
+      "points": null
+    },
+    {
+      "home": "Australien",
+      "away": "Ägypten",
+      "kickoff_utc": "2026-07-03T18:00:00Z",
+      "matchday": 4,
+      "stage": "Sechzehntelfinale",
+      "tip": [
+        1,
+        1
+      ],
+      "expected_points": 1.088,
+      "factors": {
+        "expected_goals": [
+          1.18,
+          1.02
+        ],
+        "probabilities": {
+          "home": 0.355,
+          "draw": 0.371,
+          "away": 0.274
+        },
+        "elo": {
+          "home": 1800.0,
+          "away": 1742.0,
+          "beta": 0.2042
+        },
+        "home_advantage": 0.0,
+        "trained_on_matches": 82
+      },
+      "begruendung": "Das Modell sieht ein ausgeglichenes Spiel (Heimsieg 36%, Remis 37%, Auswärtssieg 27%) und erwartet im Schnitt 1.2:1.0 Tore. Der Tipp 1:1 maximiert den Punkte-Erwartungswert (1.09 Punkte) über alle möglichen Ergebnisse – nicht die Trefferchance auf das exakte Resultat.",
+      "result": null,
+      "points": null
+    },
+    {
+      "home": "Argentinien",
+      "away": "Kap Verde",
+      "kickoff_utc": "2026-07-03T22:00:00Z",
+      "matchday": 4,
+      "stage": "Sechzehntelfinale",
+      "tip": [
+        2,
+        0
+      ],
+      "expected_points": 2.084,
+      "factors": {
+        "expected_goals": [
+          2.64,
+          0.38
+        ],
+        "probabilities": {
+          "home": 0.836,
+          "draw": 0.143,
+          "away": 0.021
+        },
+        "elo": {
+          "home": 2148.0,
+          "away": 1622.0,
+          "beta": 0.2042
+        },
+        "home_advantage": 0.0,
+        "trained_on_matches": 82
+      },
+      "begruendung": "Das Modell sieht Argentinien vorn (Heimsieg 84%, Remis 14%, Auswärtssieg 2%) und erwartet im Schnitt 2.6:0.4 Tore. Der Tipp 2:0 maximiert den Punkte-Erwartungswert (2.08 Punkte) über alle möglichen Ergebnisse – nicht die Trefferchance auf das exakte Resultat.",
+      "result": null,
+      "points": null
+    },
+    {
+      "home": "Kolumbien",
+      "away": "Ghana",
+      "kickoff_utc": "2026-07-04T01:30:00Z",
+      "matchday": 4,
+      "stage": "Sechzehntelfinale",
+      "tip": [
+        1,
+        0
+      ],
+      "expected_points": 1.804,
+      "factors": {
+        "expected_goals": [
+          1.87,
+          0.44
+        ],
+        "probabilities": {
+          "home": 0.697,
+          "draw": 0.249,
+          "away": 0.054
+        },
+        "elo": {
+          "home": 2004.0,
+          "away": 1575.0,
+          "beta": 0.2042
+        },
+        "home_advantage": 0.0,
+        "trained_on_matches": 82
+      },
+      "begruendung": "Das Modell sieht Kolumbien vorn (Heimsieg 70%, Remis 25%, Auswärtssieg 5%) und erwartet im Schnitt 1.9:0.4 Tore. Der Tipp 1:0 maximiert den Punkte-Erwartungswert (1.80 Punkte) über alle möglichen Ergebnisse – nicht die Trefferchance auf das exakte Resultat.",
+      "result": null,
+      "points": null
+    }
+  ]
+}
