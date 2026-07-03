@@ -83,3 +83,57 @@ class TestShadowAndCalibration:
     def test_match_without_probabilities_has_no_brier(self):
         report = evaluate_matchday(MATCHDAY, RESULTS, SCHEME)
         assert "brier" not in report["matches"][1]
+
+
+class TestAdvanceScoring:
+    """Zusatzfrage bei K.o.-Spielen: "Wer kommt weiter?" (Schema-Key advance)."""
+
+    SCHEME = {**SCHEME, "advance": 2}
+
+    def test_decisive_tip_and_result(self):
+        # Paraguay-Frankreich: Tipp 0:2, Ergebnis 0:2 -> Auswärts kommt weiter, korrekt
+        report = evaluate_matchday(MATCHDAY, RESULTS, self.SCHEME)
+        paraguay = report["matches"][1]
+        assert paraguay["advance"] == {
+            "tip_side": "away", "actual_side": "away", "correct": True, "points": 2,
+        }
+
+    def test_draw_tip_without_advance_tip_is_not_scored(self):
+        # Kanada-Marokko: Remis-Tipp ohne advance_tip (Alt-Daten) -> nicht wertbar
+        report = evaluate_matchday(MATCHDAY, RESULTS, self.SCHEME)
+        assert "advance" not in report["matches"][0]
+        assert report["advance_scored"] == 1
+        assert report["advance_points_total"] == 2
+
+    def test_draw_result_uses_derived_advancer(self):
+        matchday = {
+            **MATCHDAY,
+            "matches": [
+                {"home": "Deutschland", "away": "Paraguay", "kickoff_utc": "2026-07-01T18:00:00Z",
+                 "status": "revealed", "tip": [1, 1],
+                 "advance_tip": {"pick": "Deutschland", "probability": 0.61}},
+            ],
+        }
+        results = {("deutschland", "paraguay"): (1, 1)}
+        # Paraguay taucht in einer späteren Runde auf -> hat das Elfmeterschießen gewonnen
+        advancers = {("deutschland", "paraguay"): "away"}
+        report = evaluate_matchday(matchday, results, self.SCHEME, advancers)
+        assert report["matches"][0]["advance"]["correct"] is False
+        assert report["advance_points_total"] == 0
+
+        # Ohne Ableitung (z.B. Finale) bleibt die Frage offen
+        report = evaluate_matchday(matchday, results, self.SCHEME, {})
+        assert "advance" not in report["matches"][0]
+
+    def test_group_stage_is_never_scored(self):
+        matchday = {
+            **MATCHDAY,
+            "stage": "1. Runde",
+            "matches": [
+                {"home": "Kanada", "away": "Marokko", "kickoff_utc": "2026-06-12T17:00:00Z",
+                 "status": "revealed", "tip": [2, 1]},
+            ],
+        }
+        report = evaluate_matchday(matchday, {("kanada", "marokko"): (2, 1)}, self.SCHEME)
+        assert "advance" not in report["matches"][0]
+        assert report["advance_scored"] == 0

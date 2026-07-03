@@ -24,6 +24,8 @@
     "always_draw": 1
   },
   "brier_avg": 0.3968,
+  "advance_points_total": 2,
+  "advance_scored": 1,
   "matches": [
     {
       "home": "Schweiz",
@@ -43,7 +45,13 @@
         "always_draw": 0,
         "elo_favorite": 2
       },
-      "brier": 0.3968
+      "brier": 0.3968,
+      "advance": {
+        "tip_side": "home",
+        "actual_side": "home",
+        "correct": true,
+        "points": 2
+      }
     },
     {
       "home": "Australien",

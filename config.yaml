@@ -22,6 +22,9 @@ kicktipp:
     exact: 4
     goal_diff: 3
     tendency: 2
+    # Zusatzfrage bei K.o.-Spielen: "Wer kommt weiter?" (0 = Runde wertet das
+    # nicht). Wird separat ausgewiesen, nicht in points_total eingerechnet.
+    advance: 2
 
 model:
   # Zeitgewichtung: Gewicht = exp(-xi * Tage seit Spiel). 0.002/Tag ≈ Halbwertszeit ~1 Jahr.

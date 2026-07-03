@@ -11,6 +11,10 @@ const liveRows = live.filter((r) => r.matches_scored > 0);
 const liveTotal = live.reduce((s, r) => s + r.points_total, 0);
 const liveScored = live.reduce((s, r) => s + r.matches_scored, 0);
 
+// Zusatzfrage K.o.-Spiele: "Wer kommt weiter?" (separat, nicht in points_total)
+const advanceTotal = liveRows.reduce((s, r) => s + (r.advance_points_total ?? 0), 0);
+const advanceScored = liveRows.reduce((s, r) => s + (r.advance_scored ?? 0), 0);
+
 // Schatten-Summen nur, wenn der Tipper in allen gewerteten Spielen mitlief
 function sumShadow(name) {
   if (!liveRows.every((r) => r.shadow_matches?.[name] === r.matches_scored)) return null;
@@ -116,7 +120,7 @@ const backtestBarsHtml = barHtml(backtestBars, backtestMax);
                 <th>Runde</th><th class="num">Spiele</th>
                 <th class="num">Automat</th><th class="num">wahrsch. Ergebnis</th>
                 <th class="num">ELO-Favorit 2:1</th><th class="num">immer 1:1</th>
-                <th class="num">Ø Brier</th>
+                <th class="num">Weiterkommen</th><th class="num">Ø Brier</th>
               </tr>
             </thead>
             <tbody>
@@ -128,6 +132,7 @@ const backtestBarsHtml = barHtml(backtestBars, backtestMax);
                   <td class="num">{r.shadow_points?.most_probable ?? '–'}</td>
                   <td class="num">{r.shadow_points?.elo_favorite ?? '–'}</td>
                   <td class="num">{r.shadow_points?.always_draw ?? '–'}</td>
+                  <td class="num">{r.advance_scored ? r.advance_points_total : '–'}</td>
                   <td class="num">{r.brier_avg?.toFixed(3) ?? '–'}</td>
                 </tr>
               ))}
@@ -138,6 +143,7 @@ const backtestBarsHtml = barHtml(backtestBars, backtestMax);
                 <td class="num">{sumShadow('most_probable') ?? '–'}</td>
                 <td class="num">{sumShadow('elo_favorite') ?? '–'}</td>
                 <td class="num">{sumShadow('always_draw') ?? '–'}</td>
+                <td class="num">{advanceScored ? advanceTotal : '–'}</td>
                 <td class="num"></td>
               </tr>
             </tbody>

@@ -17,9 +17,32 @@ import json
 from .config import MANUAL_RESULTS_DIR, MATCHDAYS_DIR, PROJECT_ROOT, RESULTS_DIR
 from .optimizer import ALWAYS_DRAW_TIP, elo_favorite_tip, match_points
 from .sources.openligadb import fetch_competition
-from .teams import normalize
+from .teams import is_knockout_stage, normalize
 
 SHADOW_TIPPERS = ("most_probable", "elo_favorite", "always_draw")
+
+
+def _advance_sides(m: dict, result: tuple[int, int], advancers: dict | None) -> tuple[str | None, str | None]:
+    """(getippter, tatsächlicher) Weiterkommer eines K.o.-Spiels als "home"/"away".
+
+    Getippt: der Tipp-Sieger; bei Remis-Tipp der advance_tip (Elfmeterschießen).
+    Tatsächlich: der Ergebnis-Sieger; bei Remis nach 90 Minuten aus den späteren
+    Runden abgeleitet (wer dort wieder auftaucht, kam weiter) - nicht ableitbar
+    z.B. beim Halbfinale (Verlierer spielt um Platz 3) oder Finale.
+    """
+    tip_h, tip_a = m["tip"]
+    if tip_h != tip_a:
+        implied = "home" if tip_h > tip_a else "away"
+    elif m.get("advance_tip"):
+        implied = "home" if m["advance_tip"]["pick"] == m["home"] else "away"
+    else:
+        implied = None
+
+    if result[0] != result[1]:
+        actual = "home" if result[0] > result[1] else "away"
+    else:
+        actual = (advancers or {}).get((normalize(m["home"]), normalize(m["away"])))
+    return implied, actual
 
 
 def load_manual_results() -> dict[tuple[str, str], tuple[int, int]]:
@@ -63,13 +86,19 @@ def _brier(match: dict, result: tuple[int, int]) -> float | None:
     return sum((probs[k] - (1.0 if k == outcome else 0.0)) ** 2 for k in ("home", "draw", "away"))
 
 
-def evaluate_matchday(matchday: dict, results_by_pairing: dict, scheme: dict) -> dict:
+def evaluate_matchday(
+    matchday: dict,
+    results_by_pairing: dict,
+    scheme: dict,
+    advancers_by_pairing: dict | None = None,
+) -> dict:
     """Rechnet eine Spieltags-Datei ab; Spiele ohne Ergebnis/Tipp bleiben offen."""
     matches, total, scored = [], 0, 0
     counts = {"exact": 0, "goal_diff": 0, "tendency": 0, "miss": 0}
     shadow_points = {name: 0 for name in SHADOW_TIPPERS}
     shadow_matches = {name: 0 for name in SHADOW_TIPPERS}
     brier_sum, brier_n = 0.0, 0
+    advance_total, advance_scored = 0, 0
 
     for m in matchday["matches"]:
         entry = {k: m[k] for k in ("home", "away", "kickoff_utc", "status")}
@@ -97,6 +126,22 @@ def evaluate_matchday(matchday: dict, results_by_pairing: dict, scheme: dict) ->
                 entry["brier"] = round(brier, 4)
                 brier_sum += brier
                 brier_n += 1
+
+            # Zusatzfrage bei K.o.-Spielen: "Wer kommt weiter?" - separat
+            # ausgewiesen, weil nicht jede Runde sie wertet
+            stage = m.get("stage") or matchday.get("stage") or ""
+            if is_knockout_stage(stage):
+                implied, actual = _advance_sides(m, result, advancers_by_pairing)
+                if implied is not None and actual is not None:
+                    pts = scheme.get("advance", 0) if implied == actual else 0
+                    entry["advance"] = {
+                        "tip_side": implied,
+                        "actual_side": actual,
+                        "correct": implied == actual,
+                        "points": pts,
+                    }
+                    advance_total += pts
+                    advance_scored += 1
         matches.append(entry)
 
     return {
@@ -112,6 +157,8 @@ def evaluate_matchday(matchday: dict, results_by_pairing: dict, scheme: dict) ->
         "shadow_points": shadow_points,
         "shadow_matches": shadow_matches,
         "brier_avg": round(brier_sum / brier_n, 4) if brier_n else None,
+        "advance_points_total": advance_total,
+        "advance_scored": advance_scored,
         "matches": matches,
     }
 
@@ -124,19 +171,38 @@ def main(config: dict) -> None:
         return
 
     scheme = config["kicktipp"]["points"]
-    finished = [
-        m for m in fetch_competition(config["leagues"], config["season"], force_refresh=True)
-        if m.has_result
-    ]
+    all_matches = fetch_competition(config["leagues"], config["season"], force_refresh=True)
+    finished = [m for m in all_matches if m.has_result]
     results_by_pairing = {
         (m.home_key, m.away_key): (m.home_goals, m.away_goals) for m in finished
     }
     results_by_pairing.update(load_manual_results())
 
+    # Wer nach einem 90-Minuten-Remis weiterkam, steht in keiner API - aber wer
+    # in einer späteren Runde wieder auftaucht, hat das Elfmeterschießen gewonnen.
+    appearances: dict[str, set[int]] = {}
+    for m in all_matches:
+        if not m.has_placeholder:
+            appearances.setdefault(m.home_key, set()).add(m.matchday)
+            appearances.setdefault(m.away_key, set()).add(m.matchday)
+
+    def derived_advancer(m) -> str | None:
+        home_later = any(md > m.matchday for md in appearances.get(m.home_key, ()))
+        away_later = any(md > m.matchday for md in appearances.get(m.away_key, ()))
+        if home_later != away_later:
+            return "home" if home_later else "away"
+        return None  # beide (Halbfinale: Platz 3) oder keiner (Finale) -> offen
+
+    advancers_by_pairing = {
+        (m.home_key, m.away_key): derived_advancer(m)
+        for m in finished
+        if m.home_goals == m.away_goals
+    }
+
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     for md_file in matchday_files:
         matchday = json.loads(md_file.read_text(encoding="utf-8"))
-        report = evaluate_matchday(matchday, results_by_pairing, scheme)
+        report = evaluate_matchday(matchday, results_by_pairing, scheme, advancers_by_pairing)
         out = RESULTS_DIR / md_file.name
         out.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
         print(
