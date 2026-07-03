@@ -3,20 +3,19 @@
   "season": 2026,
   "matchday": 4,
   "stage": "Sechzehntelfinale",
-  "created_utc": "2026-07-03T05:15:49Z",
   "model_version": "dixon-coles-elo-1",
   "kicktipp_scheme": {
     "exact": 4,
     "goal_diff": 3,
     "tendency": 2
   },
+  "hinweis": "Vor Aktivierung der Hash-Versiegelung im Klartext veröffentlicht (Tipps vom 03.07.2026); Versiegelung gilt ab Achtelfinale.",
   "matches": [
     {
       "home": "Schweiz",
       "away": "Algerien",
       "kickoff_utc": "2026-07-03T03:00:00Z",
-      "matchday": 4,
-      "stage": "Sechzehntelfinale",
+      "status": "revealed",
       "tip": [
         2,
         1
@@ -46,8 +45,7 @@
       "home": "Australien",
       "away": "Ägypten",
       "kickoff_utc": "2026-07-03T18:00:00Z",
-      "matchday": 4,
-      "stage": "Sechzehntelfinale",
+      "status": "revealed",
       "tip": [
         1,
         1
@@ -77,8 +75,7 @@
       "home": "Argentinien",
       "away": "Kap Verde",
       "kickoff_utc": "2026-07-03T22:00:00Z",
-      "matchday": 4,
-      "stage": "Sechzehntelfinale",
+      "status": "revealed",
       "tip": [
         2,
         0
@@ -108,8 +105,7 @@
       "home": "Kolumbien",
       "away": "Ghana",
       "kickoff_utc": "2026-07-04T01:30:00Z",
-      "matchday": 4,
-      "stage": "Sechzehntelfinale",
+      "status": "revealed",
       "tip": [
         1,
         0

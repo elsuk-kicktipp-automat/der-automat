@@ -19,11 +19,8 @@ from pathlib import Path
 
 import requests
 
-from ..config import PROJECT_ROOT
+from ..config import CACHE_DIR, MAPPINGS_DIR
 from ..teams import normalize
-
-CACHE_DIR = PROJECT_ROOT / "data" / "cache"
-MAPPINGS_DIR = PROJECT_ROOT / "data" / "mappings"
 
 CLUBELO_API = "http://api.clubelo.com"
 ELORATINGS_RATINGS_URL = "https://eloratings.net/World.tsv"

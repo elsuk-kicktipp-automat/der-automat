@@ -1,0 +1,61 @@
+# Täglicher Spieltags-Lauf: Prognose für die nächste Runde, Versiegelung
+# (nur Hashes werden öffentlich), Punkteabrechnung der enthüllten Tipps.
+name: Spieltag
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # täglich 06:00 UTC, deutlich vor den WM-Anstoßzeiten
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: data-updates
+
+jobs:
+  spieltag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Prognose (idempotent pro Runde)
+        run: python -m engine.cli predict
+
+      - name: Versiegeln
+        run: python -m engine.cli seal
+        env:
+          SEAL_SECRET: ${{ secrets.SEAL_SECRET }}
+
+      - name: Punkteabrechnung
+        run: python -m engine.cli evaluate
+
+      - name: Änderungen committen
+        id: commit
+        run: |
+          git config user.name "der-automat[bot]"
+          git config user.email "noreply@github.com"
+          git add data/matchdays data/sealed data/results
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "Spieltags-Update $(date -u +%F)"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Pushes mit GITHUB_TOKEN lösen keine push-Workflows aus,
+      # deshalb wird der Site-Deploy explizit angestoßen.
+      - name: Site-Deploy anstoßen
+        if: steps.commit.outputs.changed == 'true'
+        run: gh workflow run deploy-site.yml --ref main
+        env:
+          GH_TOKEN: ${{ github.token }}

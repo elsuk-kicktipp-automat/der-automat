@@ -1,0 +1,145 @@
+---
+const { title = 'Der Automat' } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const nav = [
+  { href: `${base}/`, label: 'Spieltag' },
+  { href: `${base}/archiv/`, label: 'Archiv' },
+  { href: `${base}/bilanz/`, label: 'Bilanz' },
+  { href: `${base}/wie-ich-denke/`, label: 'Wie ich denke' },
+];
+const current = Astro.url.pathname;
+---
+
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title} · Der Automat</title>
+    <meta
+      name="description"
+      content="Der Automat: ein statistischer KI-Tipper für die Kicktipp-Runde – transparent, versiegelt, nachrechenbar."
+    />
+  </head>
+  <body>
+    <header>
+      <div class="container header-inner">
+        <a class="brand" href={`${base}/`}>⚙️ Der Automat</a>
+        <nav>
+          {nav.map((item) => (
+            <a href={item.href} class:list={{ active: current === item.href }}>
+              {item.label}
+            </a>
+          ))}
+        </nav>
+      </div>
+    </header>
+    <main class="container">
+      <slot />
+    </main>
+    <footer>
+      <div class="container">
+        <p>
+          Maschinell getippt, menschlich verlierbar. Quellcode &amp; Daten:
+          <a href="https://github.com/elsuk-kicktipp-automat/der-automat">GitHub</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --bg: #f6f7f9;
+    --surface: #ffffff;
+    --text: #1c2733;
+    --muted: #5b6b7b;
+    --line: #dde3ea;
+    --accent: #0b6e4f;
+    --accent-soft: #e3f2ec;
+    --sealed: #8b93a1;
+    --p4: #0b6e4f;
+    --p3: #2a7ab0;
+    --p2: #b07d2a;
+    --p0: #a94442;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12161b;
+      --surface: #1b222b;
+      --text: #e7edf3;
+      --muted: #9aa8b6;
+      --line: #2c3641;
+      --accent: #4cc394;
+      --accent-soft: #1e3129;
+      --sealed: #77808d;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.55;
+  }
+  .container { max-width: 880px; margin: 0 auto; padding: 0 1rem; }
+  header { background: var(--surface); border-bottom: 1px solid var(--line); }
+  .header-inner {
+    display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem;
+    align-items: center; justify-content: space-between; padding: 0.8rem 1rem;
+  }
+  .brand { font-weight: 700; font-size: 1.15rem; color: var(--text); text-decoration: none; }
+  nav { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; }
+  nav a { color: var(--muted); text-decoration: none; padding: 0.25rem 0; }
+  nav a.active, nav a:hover { color: var(--accent); }
+  main { padding: 1.5rem 1rem 3rem; }
+  footer { border-top: 1px solid var(--line); color: var(--muted); font-size: 0.85rem; }
+  footer .container { padding: 1rem; }
+  a { color: var(--accent); }
+  h1 { font-size: 1.5rem; margin: 0.5rem 0 0.25rem; }
+  h2 { font-size: 1.15rem; margin-top: 2rem; }
+  .muted { color: var(--muted); }
+  .card {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 10px; padding: 1rem; margin: 0.8rem 0;
+  }
+  .match-head {
+    display: flex; flex-wrap: wrap; gap: 0.25rem 1rem;
+    align-items: baseline; justify-content: space-between;
+  }
+  .pairing { font-weight: 600; font-size: 1.05rem; }
+  .kickoff { color: var(--muted); font-size: 0.85rem; white-space: nowrap; }
+  .tip {
+    display: inline-block; background: var(--accent-soft); color: var(--accent);
+    font-weight: 700; font-size: 1.2rem; border-radius: 8px;
+    padding: 0.15rem 0.6rem; margin: 0.4rem 0;
+  }
+  .badge {
+    display: inline-block; border-radius: 999px; font-size: 0.78rem;
+    font-weight: 600; padding: 0.1rem 0.6rem; vertical-align: middle;
+  }
+  .badge.sealed { background: var(--line); color: var(--sealed); }
+  .badge.p4 { background: var(--p4); color: #fff; }
+  .badge.p3 { background: var(--p3); color: #fff; }
+  .badge.p2 { background: var(--p2); color: #fff; }
+  .badge.p0 { background: var(--p0); color: #fff; }
+  .hash { font-family: ui-monospace, monospace; font-size: 0.78rem; word-break: break-all; color: var(--muted); }
+  .factors { color: var(--muted); font-size: 0.85rem; margin: 0.2rem 0 0.4rem; }
+  details { margin-top: 0.4rem; font-size: 0.85rem; color: var(--muted); }
+  details code { font-size: 0.78rem; word-break: break-all; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; background: var(--surface); font-size: 0.92rem; }
+  th, td { border: 1px solid var(--line); padding: 0.45rem 0.6rem; text-align: left; }
+  th { background: var(--accent-soft); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* Zwischenbreiten: zweispaltige Karten ab Tablet, nicht erst am Desktop */
+  @media (min-width: 640px) {
+    .match-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+    .match-grid .card { margin: 0; }
+  }
+  @media (min-width: 1000px) {
+    .container { max-width: 980px; }
+  }
+</style>

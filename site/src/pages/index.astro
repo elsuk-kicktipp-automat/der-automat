@@ -1,0 +1,34 @@
+---
+import Layout from '../layouts/Layout.astro';
+import MatchCard from '../components/MatchCard.astro';
+import { loadMatchdays, loadResults, resultsFor, scoredMatch } from '../lib/data.mjs';
+
+const matchdays = loadMatchdays();
+const results = loadResults();
+const current = matchdays.at(-1);
+const scored = current ? resultsFor(current, results) : undefined;
+---
+
+<Layout title="Aktueller Spieltag">
+  {current ? (
+    <>
+      <h1>{current.stage}</h1>
+      <p class="muted">
+        {current.competition === 'wm2026' ? 'WM 2026' : current.competition} ·
+        Runde {current.matchday}
+        {scored?.matches_scored > 0 &&
+          ` · bisher ${scored.points_total} Punkte aus ${scored.matches_scored} Spielen`}
+      </p>
+      <div class="match-grid">
+        {current.matches.map((m) => (
+          <MatchCard match={m} scored={scoredMatch(m, scored)} />
+        ))}
+      </div>
+    </>
+  ) : (
+    <>
+      <h1>Saisonpause</h1>
+      <p>Der Automat wartet auf den nächsten Spielplan. Bis dahin: <a href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/bilanz/`}>die Bilanz</a>.</p>
+    </>
+  )}
+</Layout>

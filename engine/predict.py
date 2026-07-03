@@ -10,13 +10,12 @@ from datetime import datetime, timedelta, timezone
 
 import numpy as np
 
-from .config import PROJECT_ROOT
+from .config import MATCHDAYS_DIR, PREDICTIONS_DIR, PROJECT_ROOT
 from .model import DixonColes
 from .optimizer import best_tip
 from .sources.elo import make_elo_source
 from .sources.openligadb import Match, fetch_competition
 
-PREDICTIONS_DIR = PROJECT_ROOT / "data" / "predictions"
 MODEL_VERSION = "dixon-coles-elo-1"
 
 
@@ -154,15 +153,36 @@ def run_predict(config: dict) -> dict | None:
     }
 
 
+def _covered_pairings(stem: str) -> set[tuple[str, str]]:
+    """Paarungen, die für diese Runde schon getippt (versiegelt oder lokal) sind."""
+    covered = set()
+    for path in [MATCHDAYS_DIR / f"{stem}.json", *PREDICTIONS_DIR.glob(f"{stem}*.json")]:
+        if path.exists():
+            data = json.loads(path.read_text(encoding="utf-8"))
+            covered |= {(m["home"], m["away"]) for m in data["matches"]}
+    return covered
+
+
 def main(config: dict) -> None:
     report = run_predict(config)
     if report is None:
         print("Keine anstehenden Spiele gefunden (Saisonpause?), nichts zu tun.")
         return
+
+    # Pro Paarung wird genau einmal getippt (Fairness-Mechanismus). Neue
+    # Paarungen derselben Runde (K.o.-Plan: Platzhalter, die erst später
+    # feststehen) kommen als weiterer Batch dazu.
+    stem = f"{report['competition']}_{report['season']}_md{report['matchday']:02d}"
+    covered = _covered_pairings(stem)
+    new_matches = [m for m in report["matches"] if (m["home"], m["away"]) not in covered]
+    if not new_matches:
+        print(f"Runde {report['matchday']} ist bereits vollständig getippt, nichts zu tun.")
+        return
+    report["matches"] = new_matches
+
+    name = f"{stem}.json" if not covered else f"{stem}_b{len(covered)}.json"
+    out = PREDICTIONS_DIR / name
     PREDICTIONS_DIR.mkdir(parents=True, exist_ok=True)
-    out = PREDICTIONS_DIR / (
-        f"{report['competition']}_{report['season']}_md{report['matchday']:02d}.json"
-    )
     out.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"{len(report['matches'])} Tipps für {report['stage']} (Runde {report['matchday']}):")
     for p in report["matches"]:

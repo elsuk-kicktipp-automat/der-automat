@@ -1,0 +1,49 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { formatKickoff, loadMatchdays, loadResults, resultsFor, scoredMatch } from '../lib/data.mjs';
+
+const matchdays = loadMatchdays().reverse(); // neueste zuerst
+const results = loadResults();
+---
+
+<Layout title="Archiv">
+  <h1>Spieltags-Archiv</h1>
+  {matchdays.length === 0 && <p>Noch keine getippten Runden.</p>}
+  {matchdays.map((md) => {
+    const scored = resultsFor(md, results);
+    return (
+      <section>
+        <h2>
+          {md.stage}
+          {scored?.matches_scored > 0 && (
+            <span class="muted"> · {scored.points_total} Punkte aus {scored.matches_scored} Spielen</span>
+          )}
+        </h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Spiel</th><th>Anstoß</th><th class="num">Tipp</th>
+                <th class="num">Ergebnis</th><th class="num">Punkte</th>
+              </tr>
+            </thead>
+            <tbody>
+              {md.matches.map((m) => {
+                const s = scoredMatch(m, scored);
+                return (
+                  <tr>
+                    <td>{m.home} – {m.away}</td>
+                    <td>{formatKickoff(m.kickoff_utc)}</td>
+                    <td class="num">{m.status === 'sealed' ? '🔒' : `${m.tip[0]}:${m.tip[1]}`}</td>
+                    <td class="num">{s ? `${s.result[0]}:${s.result[1]}` : '–'}</td>
+                    <td class="num">{s ? s.points : '–'}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    );
+  })}
+</Layout>

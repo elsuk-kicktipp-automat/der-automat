@@ -17,11 +17,10 @@ import json
 
 import requests
 
-from ..config import PROJECT_ROOT
+from ..config import CACHE_DIR
 from ..teams import is_placeholder, normalize
 
 API_BASE = "https://api.openligadb.de"
-CACHE_DIR = PROJECT_ROOT / "data" / "cache"
 
 FINAL_RESULT_TYPE_ID = 2
 

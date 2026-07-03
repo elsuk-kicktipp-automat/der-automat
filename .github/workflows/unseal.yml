@@ -1,0 +1,78 @@
+# Entsiegelt Tipps ab 5 Minuten nach Anstoß und rechnet direkt ab.
+# Läuft alle 30 Minuten; ohne fällige Spiele endet der Job nach Sekunden.
+name: Entsiegeln
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: data-updates
+
+jobs:
+  unseal:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prüfen, ob etwas fällig ist
+        id: check
+        run: |
+          pending=false
+          if ls data/sealed/*.enc >/dev/null 2>&1; then
+            now=$(date -u +%s)
+            for f in data/matchdays/*.json; do
+              if jq -e --argjson now "$now" \
+                '[.matches[] | select(.status == "sealed") | .kickoff_utc | fromdateiso8601] | any(. + 300 < $now)' \
+                "$f" >/dev/null; then
+                pending=true
+                break
+              fi
+            done
+          fi
+          echo "pending=$pending" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-python@v5
+        if: steps.check.outputs.pending == 'true'
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - if: steps.check.outputs.pending == 'true'
+        run: pip install -r requirements.txt
+
+      - name: Entsiegeln
+        if: steps.check.outputs.pending == 'true'
+        run: python -m engine.cli unseal
+        env:
+          SEAL_SECRET: ${{ secrets.SEAL_SECRET }}
+
+      - name: Punkteabrechnung
+        if: steps.check.outputs.pending == 'true'
+        run: python -m engine.cli evaluate
+
+      - name: Änderungen committen
+        id: commit
+        if: steps.check.outputs.pending == 'true'
+        run: |
+          git config user.name "der-automat[bot]"
+          git config user.email "noreply@github.com"
+          git add data/matchdays data/sealed data/results
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "Tipps entsiegelt $(date -u '+%F %H:%M') UTC"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Site-Deploy anstoßen
+        if: steps.commit.outputs.changed == 'true'
+        run: gh workflow run deploy-site.yml --ref main
+        env:
+          GH_TOKEN: ${{ github.token }}

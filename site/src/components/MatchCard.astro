@@ -1,0 +1,54 @@
+---
+import { formatKickoff } from '../lib/data.mjs';
+
+// match: Eintrag aus data/matchdays/*.json, scored: passender Eintrag aus data/results/
+const { match, scored } = Astro.props;
+const sealed = match.status === 'sealed';
+const probs = match.factors?.probabilities;
+const xg = match.factors?.expected_goals;
+const pointsClass = scored ? `p${scored.points}` : '';
+---
+
+<article class="card">
+  <div class="match-head">
+    <span class="pairing">{match.home} – {match.away}</span>
+    <span class="kickoff">{formatKickoff(match.kickoff_utc)}</span>
+  </div>
+
+  {sealed ? (
+    <>
+      <p><span class="badge sealed">🔒 Tipp abgegeben, versiegelt</span></p>
+      <p class="hash" title="SHA-256 der versiegelten Tipp-Payload">{match.hash}</p>
+      <p class="muted" style="font-size:0.85rem">
+        Der Tipp steht fest und wird nach Anstoß enthüllt – der Hash beweist es.
+      </p>
+    </>
+  ) : (
+    <>
+      <p>
+        <span class="tip">{match.tip[0]}:{match.tip[1]}</span>
+        {scored && (
+          <>
+            {' '}<span class="muted">Ergebnis {scored.result[0]}:{scored.result[1]}</span>
+            {' '}<span class:list={['badge', pointsClass]}>{scored.points} Punkte</span>
+          </>
+        )}
+      </p>
+      {probs && xg && (
+        <p class="factors">
+          Heimsieg {Math.round(probs.home * 100)} % · Remis {Math.round(probs.draw * 100)} % ·
+          Auswärtssieg {Math.round(probs.away * 100)} % · erwartete Tore {xg[0]}:{xg[1]}
+        </p>
+      )}
+      {match.begruendung && <p style="font-size:0.92rem">{match.begruendung}</p>}
+      {match.salt && match.hash && (
+        <details>
+          <summary>Fairness-Beweis nachrechnen</summary>
+          <p>Salt: <code>{match.salt}</code></p>
+          <p>Hash: <code>{match.hash}</code></p>
+          <p>Anleitung: siehe „Wie ich denke“.</p>
+        </details>
+      )}
+    </>
+  )}
+</article>

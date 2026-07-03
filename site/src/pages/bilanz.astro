@@ -1,0 +1,98 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { loadBacktest, loadResults } from '../lib/data.mjs';
+
+const club = loadBacktest('club');
+const national = loadBacktest('national');
+
+// Live-Bilanz des laufenden Betriebs aus den Abrechnungen
+const live = [...loadResults().values()].sort((a, b) => a.matchday - b.matchday);
+const liveTotal = live.reduce((s, r) => s + r.points_total, 0);
+const liveScored = live.reduce((s, r) => s + r.matches_scored, 0);
+---
+
+<Layout title="Bilanz">
+  <h1>Bilanz</h1>
+
+  <h2>Laufender Betrieb (WM 2026)</h2>
+  {liveScored === 0 ? (
+    <p class="muted">Noch keine gewerteten Spiele – die Abrechnung folgt nach den Anstößen.</p>
+  ) : (
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Runde</th><th class="num">Spiele</th><th class="num">Punkte</th><th class="num">Ø/Spiel</th></tr>
+        </thead>
+        <tbody>
+          {live.filter((r) => r.matches_scored > 0).map((r) => (
+            <tr>
+              <td>{r.stage}</td>
+              <td class="num">{r.matches_scored}</td>
+              <td class="num">{r.points_total}</td>
+              <td class="num">{(r.points_total / r.matches_scored).toFixed(2)}</td>
+            </tr>
+          ))}
+          <tr>
+            <td><strong>Gesamt</strong></td>
+            <td class="num"><strong>{liveScored}</strong></td>
+            <td class="num"><strong>{liveTotal}</strong></td>
+            <td class="num"><strong>{(liveTotal / liveScored).toFixed(2)}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  )}
+
+  <h2>Backtests</h2>
+  <p class="muted">
+    Simulierter Tippbetrieb: Vor jeder Runde wird nur auf bis dahin gespielten Partien
+    trainiert. Baselines: (a) immer 2:1 für den ELO-Favoriten, (b) immer 1:1.
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Backtest</th><th class="num">Spiele</th><th class="num">Punkte</th>
+          <th class="num">Ø/Spiel</th><th class="num">ELO-Favorit 2:1</th><th class="num">immer 1:1</th>
+        </tr>
+      </thead>
+      <tbody>
+        {club?.seasons.map((s) => (
+          <tr>
+            <td>Bundesliga {s.season}/{String(s.season + 1).slice(-2)}</td>
+            <td class="num">{s.matches}</td>
+            <td class="num">{s.points}</td>
+            <td class="num">{s.points_per_match.toFixed(3)}</td>
+            <td class="num">{s.baseline_elo_points}</td>
+            <td class="num">{s.baseline_draw_points}</td>
+          </tr>
+        ))}
+        {club && (
+          <tr>
+            <td><strong>Bundesliga gesamt</strong></td>
+            <td class="num"><strong>{club.total.matches}</strong></td>
+            <td class="num"><strong>{club.total.points}</strong></td>
+            <td class="num"><strong>{club.total.points_per_match.toFixed(3)}</strong></td>
+            <td class="num"><strong>{club.total.baseline_elo_points}</strong></td>
+            <td class="num"><strong>{club.total.baseline_draw_points}</strong></td>
+          </tr>
+        )}
+        {national && (
+          <tr>
+            <td><strong>WM 2026 (out-of-sample)</strong></td>
+            <td class="num"><strong>{national.total.matches}</strong></td>
+            <td class="num"><strong>{national.total.points}</strong></td>
+            <td class="num"><strong>{national.total.points_per_match.toFixed(3)}</strong></td>
+            <td class="num"><strong>{national.total.baseline_elo_points}</strong></td>
+            <td class="num"><strong>{national.total.baseline_draw_points}</strong></td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </div>
+  <p class="muted" style="font-size:0.85rem">
+    Hinweis zum WM-Backtest: eloratings.net liefert nur aktuelle Ratings, die
+    Retro-Zahlen tragen daher einen leichten Lookahead-Bias – für künftige
+    Tipps irrelevant.
+  </p>
+</Layout>

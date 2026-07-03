@@ -1,0 +1,64 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Wie ich denke">
+  <h1>Wie ich denke</h1>
+  <p>
+    Ich bin ein statistischer Tipper. Keine Bauchgefühle, keine Lieblingsvereine –
+    nur Daten, ein Modell und ein bisschen Erwartungswert-Mathematik.
+  </p>
+
+  <h2>1. Daten</h2>
+  <p>
+    Spielpläne und Ergebnisse kommen von <a href="https://www.openligadb.de">OpenLigaDB</a>,
+    Stärke-Ratings von <a href="http://clubelo.com">clubelo.com</a> (Vereine) bzw.
+    <a href="https://eloratings.net">eloratings.net</a> (Nationalteams).
+  </p>
+
+  <h2>2. Modell</h2>
+  <p>
+    Ein Dixon-Coles-Poisson-Modell schätzt für jedes Spiel die erwarteten Tore beider
+    Teams – aus Angriffs- und Abwehrstärke (jüngere Spiele zählen mehr), Heimvorteil
+    (bei Turnieren auf neutralem Platz abgeschaltet) und der ELO-Differenz. Daraus
+    entsteht eine vollständige Wahrscheinlichkeitsmatrix aller Ergebnisse von 0:0 bis 6:6.
+  </p>
+
+  <h2>3. Der Kicktipp-Trick</h2>
+  <p>
+    Ich tippe <em>nicht</em> das wahrscheinlichste Ergebnis, sondern das mit dem höchsten
+    Punkte-Erwartungswert unter dem Punkteschema der Runde:
+  </p>
+  <pre>E[Punkte(Tipp)] = Σ über alle Ergebnisse: P(Ergebnis) × Punkte(Tipp, Ergebnis)</pre>
+  <p>
+    Beispiel: Ein 1:1 mag das wahrscheinlichste Einzelergebnis sein – wenn aber 45 %
+    der Wahrscheinlichkeitsmasse auf Heimsiegen liegt, bringt ein Heimsieg-Tipp im
+    Schnitt mehr Punkte.
+  </p>
+
+  <h2>4. Fairness-Beweis: versiegelte Tipps</h2>
+  <p>
+    Vor Anstoß veröffentliche ich pro Spiel nur einen SHA-256-Hash meines Tipps
+    (der Klartext liegt verschlüsselt im Repo). Nach Anstoß werden Tipp, Begründung
+    und Salt enthüllt – jeder kann nachrechnen, dass der Tipp vorher feststand:
+  </p>
+  <pre>python3 -c "
+import hashlib, json
+payload = json.dumps({'{'}
+  'home': 'Kanada', 'away': 'Marokko',
+  'kickoff_utc': '2026-07-04T17:00:00Z',
+  'tip': [1, 1], 'begruendung': '…', 'salt': '…'
+{'}'}, ensure_ascii=False, sort_keys=True, separators=(',', ':'))
+print(hashlib.sha256(payload.encode()).hexdigest())"</pre>
+  <p>
+    Zusätzlich beweist der Commit-Zeitstempel im
+    <a href="https://github.com/elsuk-kicktipp-automat/der-automat">öffentlichen Repo</a>
+    den Zeitpunkt der Versiegelung.
+  </p>
+
+  <h2>5. Was noch kommt</h2>
+  <p>
+    Buchmacherquoten als Prior, eine LLM-Schicht für Kontext (Verletzungen, Sperren,
+    Muss-Siege) und die automatische Abgabe bei Kicktipp – siehe Roadmap im Repo.
+  </p>
+</Layout>

@@ -11,5 +11,14 @@ __pycache__/
 data/cache/*
 !data/cache/.gitkeep
 
+# Klartext-Tipps: dürfen vor Anstoß NIE ins öffentliche Repo.
+# Öffentlich sind nur data/matchdays/ (Hashes bzw. Enthülltes) und data/sealed/ (verschlüsselt).
+data/predictions/
+
+# Astro-Site
+site/node_modules/
+site/dist/
+site/.astro/
+
 # macOS
 .DS_Store

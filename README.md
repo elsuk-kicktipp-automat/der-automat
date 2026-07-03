@@ -1,11 +1,14 @@
 # Der Automat
 
 Ein selbstlernender KI-Tipper für die Kicktipp-Runde. Konzept: siehe [concept.md](concept.md).
+Website: **<https://elsuk-kicktipp-automat.github.io/der-automat/>**
 
-**Stand: Phase 1** – Statistik-Engine mit OpenLigaDB-Anbindung, ELO-Ratings,
-Dixon-Coles-Poisson-Modell, Kicktipp-Punkteoptimierung und Backtesting.
-Die Pipeline läuft im Test-/Härtungsbetrieb mit der **WM 2026** (bis 19.07.2026),
-danach wird per `config.yaml` auf die Bundesliga 2026/27 umgestellt.
+**Stand: Phase 2** – Statistik-Engine (OpenLigaDB + ELO, Dixon-Coles-Modell,
+Kicktipp-Punkteoptimierung, Backtesting) plus Astro-Website, Hash-Versiegelung
+und GitHub-Actions-Automatisierung. Die Pipeline läuft im Test-/Härtungsbetrieb
+mit der **WM 2026** (bis 19.07.2026), danach wird per `config.yaml` auf die
+Bundesliga 2026/27 umgestellt. Eine Kicktipp-Runde ist dafür nicht nötig –
+die Punkte rechnet die Engine selbst ab; die Abgabe bei kicktipp.de ist Phase 4.
 
 ## Wie es funktioniert
 
@@ -48,10 +51,16 @@ pip install -r requirements.txt
 # Tests (laufen ohne Netzwerk)
 python -m pytest tests/
 
-# Tipps für die nächste anstehende Runde -> data/predictions/
+# Tipps für die nächste anstehende Runde -> data/predictions/ (gitignored!)
 python -m engine.cli predict
 
-# Abrechnung der Tipps gegen die realen Ergebnisse -> data/results/
+# Tipps versiegeln: Hash öffentlich, Klartext verschlüsselt (braucht SEAL_SECRET)
+python -m engine.cli seal
+
+# Tipps nach Anstoß enthüllen
+python -m engine.cli unseal
+
+# Abrechnung der enthüllten Tipps gegen die realen Ergebnisse -> data/results/
 python -m engine.cli evaluate
 
 # Backtests -> data/backtests/  (--mode club | national | all)
@@ -60,6 +69,43 @@ python -m engine.cli backtest
 
 Alle erzeugten Daten sind menschenlesbares JSON im Repo (`data/`) – das Repo
 ist die Datenbank. API-Antworten werden unter `data/cache/` (gitignored) gecacht.
+
+## Fairness-Mechanismus & Automatisierung
+
+Klartext-Tipps liegen **nie** vor Anstoß im öffentlichen Repo
+(`data/predictions/` ist gitignored). Stattdessen (concept.md §5):
+
+1. **Versiegeln:** Pro Spiel wird nur der SHA-256-Hash von
+   `(Teams, Anstoß, Tipp, Begründung, Salt)` veröffentlicht
+   (`data/matchdays/`); der Klartext liegt Fernet-verschlüsselt in
+   `data/sealed/*.enc`. Schlüssel: `SEAL_SECRET` (GitHub Actions Secret /
+   lokale `.env`). Der Commit-Zeitstempel beweist den Zeitpunkt.
+2. **Entsiegeln:** Ab 5 Minuten nach Anstoß wird der Klartext samt Salt in die
+   Spieltags-Datei geschrieben – jeder kann den Hash nachrechnen (Anleitung
+   auf der Website unter „Wie ich denke").
+
+GitHub Actions übernimmt den Betrieb (`.github/workflows/`):
+
+| Workflow | Zeitplan | Aufgabe |
+| --- | --- | --- |
+| `spieltag.yml` | täglich 06:00 UTC | predict → seal → evaluate → Commit |
+| `unseal.yml` | alle 30 min | fällige Tipps enthüllen + abrechnen (früher Abbruch ohne fällige Spiele) |
+| `deploy-site.yml` | bei Daten-/Site-Änderungen | Astro-Build → GitHub Pages |
+
+K.o.-Pläne mit Platzhaltern („Sieger SF 12") werden unterstützt: Sobald
+Nachzügler-Paarungen feststehen, versiegelt der nächste Lauf sie als weiteren
+Batch derselben Runde.
+
+## Website
+
+Astro-Site unter `site/`, deployed auf
+<https://elsuk-kicktipp-automat.github.io/der-automat/>:
+**Spieltag** (versiegelte/enthüllte Tipps), **Archiv**, **Bilanz**
+(Live-Punkte + Backtests), **Wie ich denke** (Modell & Hash-Verifikation).
+
+```bash
+cd site && npm install && npm run dev   # lokale Vorschau
+```
 
 ## Backtesting
 
@@ -110,8 +156,9 @@ Umstieg auf Bundesliga 2026/27: Kommentarblock am Kopf der config.yaml.
 
 ```text
 engine/                Python-Engine
-  cli.py               Einstiegspunkt: predict / evaluate / backtest
-  predict.py           Prognose der nächsten Runde -> data/predictions/
+  cli.py               Einstiegspunkt: predict / seal / unseal / evaluate / backtest
+  predict.py           Prognose der nächsten Runde -> data/predictions/ (gitignored)
+  seal.py              Hash-Versiegelung + Entsiegelung nach Anstoß
   evaluate.py          Punkteabrechnung -> data/results/
   backtest.py          Backtests (club + national) -> data/backtests/
   model.py             Dixon-Coles-Poisson mit ELO-Term
@@ -122,9 +169,11 @@ engine/                Python-Engine
     elo.py             ELO-Adapter (clubelo.com | eloratings.net)
 tests/                 pytest-Suite (ohne Netzwerkzugriff lauffähig)
 data/                  JSON-„Datenbank" (cache/ ist gitignored)
+  matchdays/           öffentliche Spieltags-Dateien (Hashes bzw. Enthülltes)
+  sealed/              verschlüsselte Klartext-Tipps bis zum Anstoß
   mappings/            Namens-Zuordnung OpenLigaDB -> ELO-Quellen
-site/                  Astro-Website (Phase 2, noch leer)
-.github/workflows/     GitHub Actions (Phase 2+, noch leer)
+site/                  Astro-Website (GitHub Pages)
+.github/workflows/     GitHub Actions (Spieltag, Entsiegeln, Site-Deploy)
 config.yaml            Wettbewerb, Punkteschema, Modell- und Backtest-Parameter
 .env.example           Vorlage für Secrets späterer Phasen (Phase 1 braucht keine)
 ```
@@ -133,7 +182,8 @@ config.yaml            Wettbewerb, Punkteschema, Modell- und Backtest-Parameter
 
 - [x] **Phase 1:** Engine (OpenLigaDB + ELO), Modell, Punkteoptimierung,
       Backtesting, WM-2026-Testbetrieb
-- [ ] **Phase 2:** Astro-Site, Hash-Versiegelung, Deployment
+- [x] **Phase 2:** Astro-Site, Hash-Versiegelung, GitHub-Actions-Betrieb,
+      Deployment auf Pages
 - [ ] **Phase 3:** LLM-Schicht (Dossier, Adjustierung, Begründungen)
 - [ ] **Phase 4:** Kicktipp-Bot (Playwright-Abgabe)
 - [ ] **Phase 5:** Selbstlernen, Schattentipper, Dashboard
