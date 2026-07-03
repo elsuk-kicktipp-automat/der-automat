@@ -14,12 +14,31 @@ const scored = current ? resultsFor(current, results) : undefined;
     <>
       <h1>{current.stage}</h1>
       <p class="muted">
-        {current.competition === 'wm2026' ? 'WM 2026' : current.competition} ·
-        Runde {current.matchday}
-        {scored?.matches_scored > 0 &&
-          ` · bisher ${scored.points_total} Punkte aus ${scored.matches_scored} Spielen`}
+        {current.competition === 'wm2026' ? 'WM 2026' : current.competition} · Runde {current.matchday}
       </p>
       {current.hinweis && <p class="notice">⚠️ {current.hinweis}</p>}
+      {scored?.matches_scored > 0 && (
+        <div class="stat-grid">
+          <div class="stat-tile">
+            <span class="stat-value accent">{scored.points_total}</span>
+            <span class="stat-label">Punkte bisher</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-value">{scored.matches_scored}/{current.matches.length}</span>
+            <span class="stat-label">Spiele gewertet</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-value">{(scored.points_total / scored.matches_scored).toFixed(2)}</span>
+            <span class="stat-label">Punkte / Spiel</span>
+          </div>
+          {scored.brier_avg != null && (
+            <div class="stat-tile">
+              <span class="stat-value">{scored.brier_avg.toFixed(3)}</span>
+              <span class="stat-label">Ø Brier-Score</span>
+            </div>
+          )}
+        </div>
+      )}
       <div class="match-grid">
         {current.matches.map((m) => (
           <MatchCard match={m} scored={scoredMatch(m, scored)} />

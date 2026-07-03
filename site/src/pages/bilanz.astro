@@ -7,15 +7,63 @@ const national = loadBacktest('national');
 
 // Live-Bilanz des laufenden Betriebs aus den Abrechnungen
 const live = [...loadResults().values()].sort((a, b) => a.matchday - b.matchday);
+const liveRows = live.filter((r) => r.matches_scored > 0);
 const liveTotal = live.reduce((s, r) => s + r.points_total, 0);
 const liveScored = live.reduce((s, r) => s + r.matches_scored, 0);
 
 // Schatten-Summen nur, wenn der Tipper in allen gewerteten Spielen mitlief
 function sumShadow(name: string): number | null {
-  const rows = live.filter((r) => r.matches_scored > 0);
-  if (!rows.every((r) => r.shadow_matches?.[name] === r.matches_scored)) return null;
-  return rows.reduce((s: number, r) => s + (r.shadow_points?.[name] ?? 0), 0);
+  if (!liveRows.every((r) => r.shadow_matches?.[name] === r.matches_scored)) return null;
+  return liveRows.reduce((s: number, r) => s + (r.shadow_points?.[name] ?? 0), 0);
 }
+
+// Vergleichsbalken für den laufenden Betrieb: Automat vs. drei Schattentipper,
+// jeweils als Anteil vom höchsten Wert in diesem Vergleich (nicht 0-100 %).
+type BarSeries = { name: string; points: number; color: string; highlight?: boolean };
+type NullableBarSeries = Omit<BarSeries, 'points'> & { points: number | null };
+const shadowTotals = liveScored > 0
+  ? [
+      { name: 'Automat', points: liveTotal, color: 'var(--accent)', highlight: true },
+      { name: 'wahrsch. Ergebnis', points: sumShadow('most_probable'), color: 'var(--series-blue)' },
+      { name: 'ELO-Favorit 2:1', points: sumShadow('elo_favorite'), color: 'var(--series-amber)' },
+      { name: 'immer 1:1', points: sumShadow('always_draw'), color: 'var(--series-red)' },
+    ].filter((s: NullableBarSeries): s is BarSeries => s.points != null)
+  : [];
+const shadowMax = Math.max(1, ...shadowTotals.map((s) => s.points ?? 0));
+
+type BacktestSummary = { label: string; matches: number; points: number; ppm: number; elo: number; draw: number };
+function isBacktestSummary(value: BacktestSummary | null): value is BacktestSummary {
+  return value !== null;
+}
+
+const backtests = [
+  club ? {
+    label: 'Bundesliga gesamt',
+    matches: club.total.matches,
+    points: club.total.points,
+    ppm: club.total.points_per_match,
+    elo: club.total.baseline_elo_points,
+    draw: club.total.baseline_draw_points,
+  } : null,
+  national ? {
+    label: 'WM 2026 out-of-sample',
+    matches: national.total.matches,
+    points: national.total.points,
+    ppm: national.total.points_per_match,
+    elo: national.total.baseline_elo_points,
+    draw: national.total.baseline_draw_points,
+  } : null,
+].filter(isBacktestSummary);
+
+const backtestTotalMatches = backtests.reduce((s, b) => s + b.matches, 0);
+const backtestTotalPoints = backtests.reduce((s, b) => s + b.points, 0);
+const backtestPpm = backtestTotalMatches ? backtestTotalPoints / backtestTotalMatches : 0;
+const backtestBars: BarSeries[] = [
+  { name: 'Automat', points: backtestTotalPoints, color: 'var(--accent)', highlight: true },
+  { name: 'ELO-Favorit 2:1', points: backtests.reduce((s, b) => s + b.elo, 0), color: 'var(--series-amber)' },
+  { name: 'immer 1:1', points: backtests.reduce((s, b) => s + b.draw, 0), color: 'var(--series-red)' },
+];
+const backtestMax = Math.max(1, ...backtestBars.map((s) => s.points ?? 0));
 ---
 
 <Layout title="Bilanz">
@@ -32,40 +80,71 @@ function sumShadow(name: string): number | null {
         und immer 1:1. Brier misst die Kalibrierung der Wahrscheinlichkeiten
         (kleiner = besser).
       </p>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Runde</th><th class="num">Spiele</th>
-              <th class="num">Automat</th><th class="num">wahrsch. Ergebnis</th>
-              <th class="num">ELO-Favorit 2:1</th><th class="num">immer 1:1</th>
-              <th class="num">Ø Brier</th>
-            </tr>
-          </thead>
-          <tbody>
-            {live.filter((r) => r.matches_scored > 0).map((r) => (
-              <tr>
-                <td>{r.stage}</td>
-                <td class="num">{r.matches_scored}</td>
-                <td class="num"><strong>{r.points_total}</strong></td>
-                <td class="num">{r.shadow_points?.most_probable ?? '–'}</td>
-                <td class="num">{r.shadow_points?.elo_favorite ?? '–'}</td>
-                <td class="num">{r.shadow_points?.always_draw ?? '–'}</td>
-                <td class="num">{r.brier_avg?.toFixed(3) ?? '–'}</td>
-              </tr>
-            ))}
-            <tr>
-              <td><strong>Gesamt</strong></td>
-              <td class="num"><strong>{liveScored}</strong></td>
-              <td class="num"><strong>{liveTotal}</strong></td>
-              <td class="num"><strong>{sumShadow('most_probable') ?? '–'}</strong></td>
-              <td class="num"><strong>{sumShadow('elo_favorite') ?? '–'}</strong></td>
-              <td class="num"><strong>{sumShadow('always_draw') ?? '–'}</strong></td>
-              <td class="num"></td>
-            </tr>
-          </tbody>
-        </table>
+
+      <div class="stat-grid">
+        <div class="stat-tile">
+          <span class="stat-value accent">{liveTotal}</span>
+          <span class="stat-label">Punkte gesamt</span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-value">{liveScored}</span>
+          <span class="stat-label">Spiele gewertet</span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-value">{(liveTotal / liveScored).toFixed(2)}</span>
+          <span class="stat-label">Punkte / Spiel</span>
+        </div>
       </div>
+
+      <div class="bar-chart" role="img" aria-label="Punktevergleich Automat gegen Schattentipper, Gesamtsaison">
+        {shadowTotals.map((s) => (
+          <div class:list={['bar-row', { 'is-highlight': s.highlight }]}>
+            <span class="bar-name">{s.name}</span>
+            <span class="bar-track">
+              <span class="bar-fill" style={`--pct:${(s.points / shadowMax) * 100}%; --bar-color:${s.color}`}></span>
+            </span>
+            <span class="bar-value">{s.points}</span>
+          </div>
+        ))}
+      </div>
+
+      <details>
+        <summary>Runde für Runde</summary>
+        <div class="table-wrap" style="margin-top:0.6rem">
+          <table>
+            <thead>
+              <tr>
+                <th>Runde</th><th class="num">Spiele</th>
+                <th class="num">Automat</th><th class="num">wahrsch. Ergebnis</th>
+                <th class="num">ELO-Favorit 2:1</th><th class="num">immer 1:1</th>
+                <th class="num">Ø Brier</th>
+              </tr>
+            </thead>
+            <tbody>
+              {liveRows.map((r) => (
+                <tr>
+                  <td>{r.stage}</td>
+                  <td class="num">{r.matches_scored}</td>
+                  <td class="num"><strong>{r.points_total}</strong></td>
+                  <td class="num">{r.shadow_points?.most_probable ?? '–'}</td>
+                  <td class="num">{r.shadow_points?.elo_favorite ?? '–'}</td>
+                  <td class="num">{r.shadow_points?.always_draw ?? '–'}</td>
+                  <td class="num">{r.brier_avg?.toFixed(3) ?? '–'}</td>
+                </tr>
+              ))}
+              <tr>
+                <td><strong>Gesamt</strong></td>
+                <td class="num"><strong>{liveScored}</strong></td>
+                <td class="num"><strong>{liveTotal}</strong></td>
+                <td class="num"><strong>{sumShadow('most_probable') ?? '–'}</strong></td>
+                <td class="num"><strong>{sumShadow('elo_favorite') ?? '–'}</strong></td>
+                <td class="num"><strong>{sumShadow('always_draw') ?? '–'}</strong></td>
+                <td class="num"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
     </>
   )}
 
@@ -74,6 +153,37 @@ function sumShadow(name: string): number | null {
     Simulierter Tippbetrieb: Vor jeder Runde wird nur auf bis dahin gespielten Partien
     trainiert. Baselines: (a) immer 2:1 für den ELO-Favoriten, (b) immer 1:1.
   </p>
+  {backtests.length > 0 && (
+    <>
+      <div class="stat-grid">
+        <div class="stat-tile">
+          <span class="stat-value accent">{backtestTotalPoints}</span>
+          <span class="stat-label">Backtest-Punkte</span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-value">{backtestTotalMatches}</span>
+          <span class="stat-label">Spiele simuliert</span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-value">{backtestPpm.toFixed(3)}</span>
+          <span class="stat-label">Punkte / Spiel</span>
+        </div>
+      </div>
+
+      <div class="bar-chart" role="img" aria-label="Punktevergleich im Backtest, Automat gegen Baselines">
+        {backtestBars.map((s) => (
+          <div class:list={['bar-row', { 'is-highlight': s.highlight }]}>
+            <span class="bar-name">{s.name}</span>
+            <span class="bar-track">
+              <span class="bar-fill" style={`--pct:${(s.points / backtestMax) * 100}%; --bar-color:${s.color}`}></span>
+            </span>
+            <span class="bar-value">{s.points}</span>
+          </div>
+        ))}
+      </div>
+    </>
+  )}
+
   <div class="table-wrap">
     <table>
       <thead>

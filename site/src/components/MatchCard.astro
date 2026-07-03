@@ -42,10 +42,17 @@ const pointsClass = scored ? `p${scored.points}` : '';
         )}
       </p>
       {probs && xg && (
-        <p class="factors">
-          Heimsieg {Math.round(probs.home * 100)} % · Remis {Math.round(probs.draw * 100)} % ·
-          Auswärtssieg {Math.round(probs.away * 100)} % · erwartete Tore {xg[0]}:{xg[1]}
-        </p>
+        <>
+          <div class="prob-bar" role="img" aria-label={`Heimsieg ${Math.round(probs.home * 100)} Prozent, Remis ${Math.round(probs.draw * 100)} Prozent, Auswärtssieg ${Math.round(probs.away * 100)} Prozent`}>
+            <span class="p-home" style={`width:${probs.home * 100}%`}></span>
+            <span class="p-draw" style={`width:${probs.draw * 100}%`}></span>
+            <span class="p-away" style={`width:${probs.away * 100}%`}></span>
+          </div>
+          <p class="factors">
+            Heimsieg {Math.round(probs.home * 100)} % · Remis {Math.round(probs.draw * 100)} % ·
+            Auswärtssieg {Math.round(probs.away * 100)} % · erwartete Tore {xg[0]}:{xg[1]}
+          </p>
+        </>
       )}
       {match.begruendung && <p style="font-size:0.92rem">{match.begruendung}</p>}
       {match.salt && match.hash && (
