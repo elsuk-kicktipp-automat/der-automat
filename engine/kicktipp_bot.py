@@ -152,7 +152,15 @@ def submit_tips(
 
         if not dry_run and log["filled"]:
             page.get_by_role("button", name="Tipps speichern").click()
-            page.wait_for_load_state("networkidle")
+            # Best-effort: manche Seiten werden wegen Hintergrund-Verbindungen
+            # (Tracking/Ads) nie vollständig "idle" - das POST ist mit dem
+            # Klick bereits abgeschickt, ein Timeout hier heißt nicht, dass
+            # das Speichern fehlgeschlagen ist (im Test verifiziert: Werte
+            # waren serverseitig gespeichert, obwohl networkidle nie kam).
+            try:
+                page.wait_for_load_state("networkidle", timeout=10000)
+            except Exception:
+                pass
             log["submitted"] = True
 
         context.close()
