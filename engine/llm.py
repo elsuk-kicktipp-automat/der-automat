@@ -66,13 +66,13 @@ def build_prompt(match_context: dict) -> str:
             f"- News-Check: {news_checked} aktuelle Schlagzeile(n) geprüft, kein harter Grund für "
             "eine Anpassung gefunden" if news_checked > 0 else "- News-Check: keine einschlägigen aktuellen Schlagzeilen gefunden"
         )
-    lines.append(f"- Punkte-Erwartungswert-optimaler Tipp fürs Kicktipp-Schema: {tip[0]}:{tip[1]}")
+    lines.append(f"- Für Kicktipp ausgewählter Tipp: {tip[0]}:{tip[1]}")
     lines.append(
-        "Schreibe 5-7 sachliche Sätze auf Deutsch, die diesen Tipp für Laien ausführlich "
-        "einordnen. Benenne dabei explizit, welche der obigen Quellen (Modell, ELO, "
-        "Buchmacherquoten, News-Check) wie zur Einschätzung beigetragen haben, und erkläre, "
-        "warum der Tipp den Punkte-Erwartungswert maximiert (nicht zwingend das "
-        "wahrscheinlichste Einzelergebnis ist). Keine Anrede, keine Überschrift, nur der Fließtext."
+        "Schreibe 3-4 kurze Sätze auf Deutsch, so dass ein normaler Kicktipp-Mitspieler "
+        "es sofort versteht. Vermeide Fachwörter wie Erwartungswert, Matrix, Prior oder "
+        "Dixon-Coles. Beginne mit dem Tipp und erkläre dann einfach: Wer wirkt stärker, "
+        "was sagen Quoten/ELO/News grob, und warum dieser Tipp für Kicktipp sinnvoll ist. "
+        "Keine Anrede, keine Überschrift, nur Fließtext."
     )
     return "\n".join(lines)
 
@@ -117,7 +117,7 @@ def build_adjustment_prompt(match_context: dict, news: list[dict]) -> str:
     tip = match_context["tip"]
     lines = [
         f"Fußballspiel: {home} (Heim) gegen {away} (Auswärts).",
-        f"Statistischer Tipp (Punkte-Erwartungswert-optimal): {tip[0]}:{tip[1]}.",
+        f"Statistischer Tipp: {tip[0]}:{tip[1]}.",
         "Aktuelle Schlagzeilen (unsortiert, nicht alle relevant):",
     ]
     for item in news:

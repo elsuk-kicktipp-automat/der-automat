@@ -6,8 +6,8 @@ der kanonischen Payload (Teams, Anstoß, Tipp, Begründung, Salt) veröffentlich
 Fernet-verschlüsselt im Repo (data/sealed/*.enc); der Schlüssel SEAL_SECRET
 existiert nur als GitHub Actions Secret bzw. in der lokalen .env.
 
-Entsiegeln: Ab 2 Minuten nach Anstoß wird der Klartext inkl. Salt in die
-öffentliche Spieltags-Datei geschrieben. Jeder kann den Hash nachrechnen:
+Entsiegeln: Ab Anstoß wird der Klartext inkl. Salt in die öffentliche
+Spieltags-Datei geschrieben. Jeder kann den Hash nachrechnen:
 
     sha256(json.dumps({felder..., "salt": salt}, ensure_ascii=False,
                       sort_keys=True, separators=(",", ":")))
@@ -28,7 +28,7 @@ from cryptography.fernet import Fernet
 
 from .config import MATCHDAYS_DIR, PREDICTIONS_DIR, PROJECT_ROOT, SEALED_DIR, load_dotenv
 
-REVEAL_DELAY = timedelta(minutes=2)
+REVEAL_DELAY = timedelta(minutes=0)
 
 # Diese Felder (plus Salt) gehen in den Hash. advance_tip (Elfmeterschießen-
 # Zusatzfrage bei K.o.-Remis-Tipps) muss wie der Tipp selbst vor Anstoß feststehen.
@@ -148,7 +148,7 @@ def unseal_all(
     sealed_dir: Path = SEALED_DIR,
     now: datetime | None = None,
 ) -> list[Path]:
-    """Entsiegelt alle Spiele ab 2 Minuten nach Anstoß; gibt geänderte Dateien zurück."""
+    """Entsiegelt alle Spiele ab Anstoß; gibt geänderte Dateien zurück."""
     now = now or datetime.now(timezone.utc)
     fernet = _fernet(secret)
     changed_files = []

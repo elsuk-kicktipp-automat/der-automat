@@ -17,7 +17,9 @@ const pointsClass = scored ? `p${scored.points}` : '';
 const paperBet = match.paper_bet;
 const paperBetResult = scored?.paper_bet_result;
 const money = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
-const percent = new Intl.NumberFormat('de-DE', { style: 'percent', maximumFractionDigits: 1 });
+const stake = paperBet?.stake_eur ?? 0;
+const possibleProfit = paperBet?.odds_decimal ? stake * (paperBet.odds_decimal - 1) : null;
+const possibleLoss = stake > 0 ? -stake : null;
 ---
 
 <article class="match-card" style={`animation-delay:${delay}ms`}>
@@ -99,19 +101,32 @@ const percent = new Intl.NumberFormat('de-DE', { style: 'percent', maximumFracti
             {paperBetResult ? (
               <span>
                 <b>{money.format(paperBetResult.profit_eur)}</b>
-                <small>Netto</small>
+                <small>Ergebnis</small>
               </span>
             ) : (
               <span>
-                <b>{paperBet.edge != null ? percent.format(paperBet.edge) : '–'}</b>
-                <small>Edge</small>
+                <b>{possibleProfit != null ? money.format(possibleProfit) : '–'}</b>
+                <small>Gewinn wenn richtig</small>
               </span>
             )}
           </div>
-          {paperBet.model_probability != null && (
+          {paperBetResult ? (
             <p class="bet-note">
-              Modell {percent.format(paperBet.model_probability)} · Markt {percent.format(paperBet.implied_probability)}
-              {paperBet.expected_value_eur != null && <> · Erwartungswert {money.format(paperBet.expected_value_eur)}</>}
+              {paperBetResult.outcome === 'won'
+                ? <>Die Paper-Wette hat gewonnen: netto {money.format(paperBetResult.profit_eur)}.</>
+                : paperBetResult.outcome === 'lost'
+                  ? <>Die Paper-Wette hat verloren: netto {money.format(paperBetResult.profit_eur)}.</>
+                  : <>Es wurde keine Paper-Wette mit Einsatz gespielt.</>}
+            </p>
+          ) : stake > 0 && possibleProfit != null && possibleLoss != null ? (
+            <p class="bet-note">
+              Wenn {paperBet.selection_label} stimmt: {money.format(possibleProfit)} Gewinn netto.
+              Wenn nicht: {money.format(possibleLoss)} Verlust.
+              {paperBet.edge != null && <> Einschätzung der Wette: {paperBet.edge >= 0 ? 'leicht positiv' : 'eher riskant'}.</>}
+            </p>
+          ) : (
+            <p class="bet-note">
+              Keine Paper-Wette mit Einsatz, weil keine passende Quote oder kein rechnerischer Vorteil vorlag.
             </p>
           )}
         </div>

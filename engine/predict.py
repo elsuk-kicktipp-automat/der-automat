@@ -106,36 +106,39 @@ def build_begruendung(
     news_checked: int | None = None,
     llm_adjustment: dict | None = None,
 ) -> str:
-    """Ausführliche Template-Begründung (LLM-Schicht formuliert bei Bedarf um,
-    siehe engine/llm.py) - nennt explizit, welche Quellen mit welchem Gewicht
-    zur Entscheidung beigetragen haben: ELO-Prior, Buchmacherquoten-Blend,
-    News-Prüfung (Schatten-Anpassung), zum Schluss die Punkteoptimierung."""
+    """Kurze, laienverständliche Template-Begründung.
+
+    Fachbegriffe bleiben draußen; die Detailquellen stehen darunter im
+    Quellenblock. Das LLM darf diesen Text später schöner formulieren, soll
+    aber dieselbe einfache Tonalität behalten.
+    """
     favorit = (
         m.home_name if probs["home"] > max(probs["draw"], probs["away"])
         else m.away_name if probs["away"] > max(probs["draw"], probs["home"])
         else None
     )
-    lage = (
-        f"Das Modell sieht {favorit} vorn" if favorit
-        else "Das Modell sieht ein ausgeglichenes Spiel"
-    )
+    lage = f"{favorit} wirkt etwas stärker" if favorit else "das Spiel wirkt ziemlich offen"
     sentences = [
-        f"{lage} (Heimsieg {probs['home']:.0%}, Remis {probs['draw']:.0%}, "
-        f"Auswärtssieg {probs['away']:.0%}) und erwartet im Schnitt {lam:.1f}:{mu:.1f} Tore."
+        f"Mein Tipp ist {tip[0]}:{tip[1]}. Der Grund: {lage}.",
+        f"Die grobe Richtung ist Heim {probs['home']:.0%}, Remis {probs['draw']:.0%}, "
+        f"Auswärts {probs['away']:.0%}; rechnerisch passt dazu etwa ein Spiel mit {lam:.1f}:{mu:.1f} Toren.",
     ]
 
     if elo and elo.get("home") is not None and elo.get("away") is not None:
         diff = elo["home"] - elo["away"]
+        side = m.home_name if diff > 0 else m.away_name
         sentences.append(
-            f"Die ELO-Bewertung ({elo['home']:.0f} zu {elo['away']:.0f}, Differenz {diff:+.0f}) "
-            "fließt als Prior in die statistische Grundeinschätzung ein."
+            f"Die ELO-Zahlen sprechen eher für {side}."
         )
 
     if market_probs is not None and market_weight > 0:
+        market_fav = (
+            m.home_name if market_probs["home"] > max(market_probs["draw"], market_probs["away"])
+            else m.away_name if market_probs["away"] > max(market_probs["home"], market_probs["draw"])
+            else "ein enges Spiel"
+        )
         sentences.append(
-            f"Die Buchmacherquoten (Heimsieg {market_probs['home']:.0%}, Remis "
-            f"{market_probs['draw']:.0%}, Auswärtssieg {market_probs['away']:.0%}) sind zu "
-            f"{market_weight:.0%} in die Prognose eingerechnet."
+            f"Auch die Quoten zeigen eher Richtung {market_fav}."
         )
 
     if llm_adjustment and llm_adjustment.get("applied"):
@@ -158,15 +161,14 @@ def build_begruendung(
         if news_checked > 0:
             schlagzeile = "Schlagzeile" if news_checked == 1 else "Schlagzeilen"
             sentences.append(
-                f"{news_checked} aktuelle {schlagzeile} wurden auf einen harten Grund für "
-                "eine Anpassung geprüft (Verletzung, Sperre, Rotation), ohne konkreten Treffer."
+                f"{news_checked} aktuelle {schlagzeile} wurden geprüft; es gab keinen klaren Grund, den Tipp zu ändern."
             )
         else:
-            sentences.append("Es wurden keine einschlägigen aktuellen Schlagzeilen zu diesem Spiel gefunden.")
+            sentences.append("Es gab keine relevante aktuelle Nachricht, die den Tipp verändert.")
 
     sentences.append(
-        f"Der Tipp {tip[0]}:{tip[1]} maximiert den Punkte-Erwartungswert ({ev:.2f} Punkte) über "
-        "alle möglichen Ergebnisse – nicht die Trefferchance auf das exakte Resultat."
+        "Der Tipp ist nicht geraten: Er ist die Mischung, die für Kicktipp am meisten verspricht "
+        "- also Ergebnis-Chance und mögliche Punkte zusammen betrachtet."
     )
     if advance_tip:
         sentences.append(

@@ -50,7 +50,7 @@
         "trained_on_matches": 88,
         "llm_adjustment": null
       },
-      "begruendung": "Der Tipp auf ein 1:2-Ergebnis maximiert den Punkte-Erwartungswert, da er ein gutes Verhältnis zwischen Wahrscheinlichkeit und Punkteauszahlung bietet. Obwohl ein Sieg Marokkos mit 50% am wahrscheinlichsten ist, bietet das Kicktipp-Schema oft mehr Punkte für weniger wahrscheinliche Ergebnisse, wie ein 1:2-Auswärtssieg. Der Tipp berücksichtigt sowohl die statistischen Modelle als auch die Buchmacherquoten, um das beste Verhältnis zwischen Risiko und möglicher Belohnung zu finden. Durch die Wahl dieses Ergebnisses kann der Punkte-Erwartungswert maximiert werden, auch wenn es nicht das wahrscheinlichste Einzelergebnis ist.",
+      "begruendung": "Mein Tipp ist 1:2 für Marokko. Das Modell sieht Marokko klar vorne: Auswärtssieg etwa 50 %, Kanada-Sieg etwa 20 %. Auch die Quoten und die ELO-Zahlen sprechen eher für Marokko. Für Kicktipp ist 1:2 deshalb ein sinnvoller Tipp: Er passt zur wahrscheinlichsten Richtung und kann mehr Punkte bringen als nur ein sehr vorsichtiger Standardtipp.",
       "shadow_tips": {
         "most_probable": [
           1,

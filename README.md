@@ -104,10 +104,9 @@ Klartext-Tipps liegen **nie** vor Anstoß im öffentlichen Repo
    (`data/matchdays/`); der Klartext liegt Fernet-verschlüsselt in
    `data/sealed/*.enc`. Schlüssel: `SEAL_SECRET` (GitHub Actions Secret /
    lokale `.env`). Der Commit-Zeitstempel beweist den Zeitpunkt.
-2. **Entsiegeln:** Ab 2 Minuten nach Anstoß wird der Klartext samt Salt in die
+2. **Entsiegeln:** Ab Anstoß wird der Klartext samt Salt in die
    Spieltags-Datei geschrieben – der 5-Minuten-Worker hält die normale
-   Veröffentlichungsverzögerung klein und vermeidet Veröffentlichung vor einem
-   leicht verspäteten realen Anpfiff. Jeder kann den Hash nachrechnen
+   Veröffentlichungsverzögerung klein. Jeder kann den Hash nachrechnen
    (Anleitung auf der Website unter „Wie ich denke").
 
 GitHub Actions übernimmt den Betrieb (`.github/workflows/`):
@@ -115,7 +114,7 @@ GitHub Actions übernimmt den Betrieb (`.github/workflows/`):
 | Workflow | Zeitplan | Aufgabe |
 | --- | --- | --- |
 | `spieltag.yml` | stündlich | predict (Spiele im 4h-Fenster vor Anstoß) → seal → evaluate → learn → Commit → Kicktipp-Abgabe (verifiziert, aus den versiegelten .enc) |
-| `unseal.yml` | alle 5 min | fällige Tipps ab 2 Minuten nach Anstoß enthüllen + abrechnen (früher Abbruch ohne fällige Spiele) |
+| `unseal.yml` | alle 5 min | fällige Tipps ab Anstoß enthüllen + abrechnen (früher Abbruch ohne fällige Spiele) |
 | `deploy-site.yml` | bei Daten-/Site-Änderungen | Astro-Build → GitHub Pages |
 
 Der Feature-Branch `feature/paper-betting` ist für Tests ebenfalls in

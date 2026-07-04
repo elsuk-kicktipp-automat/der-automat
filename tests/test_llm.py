@@ -62,9 +62,10 @@ class TestBuildPrompt:
         prompt = build_prompt(context)
         assert "2 aktuelle Schlagzeile" in prompt
 
-    def test_asks_for_longer_source_attributed_text(self):
+    def test_asks_for_short_plain_language_text(self):
         prompt = build_prompt(MATCH_CONTEXT)
-        assert "5-7" in prompt
+        assert "3-4 kurze Sätze" in prompt
+        assert "Vermeide Fachwörter" in prompt
 
 
 class TestCallGroq:

@@ -112,7 +112,7 @@ class TestBuildBegruendungAdvanceTip:
 
 
 class TestBuildBegruendungFactors:
-    """Die Begründung soll explizit nennen, welche Quellen zur Entscheidung beitrugen."""
+    """Die Begründung soll Quellen laienverständlich einordnen."""
 
     PROBS = {"home": 0.49, "draw": 0.31, "away": 0.20}
 
@@ -121,8 +121,8 @@ class TestBuildBegruendungFactors:
             _match(), 1.73, 1.09, self.PROBS, (2, 1), 1.28,
             elo={"home": 1683.0, "away": 1608.0},
         )
-        assert "1683" in text and "1608" in text
-        assert "+75" in text  # Differenz
+        assert "ELO-Zahlen" in text
+        assert "Australien" in text
 
     def test_omits_elo_sentence_when_absent(self):
         text = build_begruendung(_match(), 1.73, 1.09, self.PROBS, (2, 1), 1.28, elo=None)
@@ -133,8 +133,8 @@ class TestBuildBegruendungFactors:
             _match(), 1.73, 1.09, self.PROBS, (2, 1), 1.28,
             market_probs={"home": 0.45, "draw": 0.30, "away": 0.25}, market_weight=0.7,
         )
-        assert "Buchmacherquoten" in text
-        assert "70%" in text
+        assert "Quoten" in text
+        assert "Australien" in text
 
     def test_omits_market_sentence_when_weight_zero(self):
         text = build_begruendung(
@@ -157,7 +157,7 @@ class TestBuildBegruendungFactors:
 
     def test_mentions_no_news_found(self):
         text = build_begruendung(_match(), 1.73, 1.09, self.PROBS, (2, 1), 1.28, news_checked=0)
-        assert "keine einschlägigen" in text
+        assert "keine relevante aktuelle Nachricht" in text
 
 
 class TestTipWindow:

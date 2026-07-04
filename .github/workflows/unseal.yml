@@ -1,4 +1,4 @@
-# Entsiegelt Tipps ab 2 Minuten nach Anstoß und rechnet direkt ab.
+# Entsiegelt Tipps ab Anstoß und rechnet direkt ab.
 # Läuft alle 5 Minuten; ohne fällige Spiele endet der Job nach Sekunden.
 name: Entsiegeln
 
@@ -28,7 +28,7 @@ jobs:
             now=$(date -u +%s)
             for f in data/matchdays/*.json; do
               if jq -e --argjson now "$now" \
-                '[.matches[] | select(.status == "sealed") | .kickoff_utc | fromdateiso8601] | any(. + 120 <= $now)' \
+                '[.matches[] | select(.status == "sealed") | .kickoff_utc | fromdateiso8601] | any(. <= $now)' \
                 "$f" >/dev/null; then
                 pending=true
                 break
