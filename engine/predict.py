@@ -23,12 +23,13 @@ from .optimizer import (
     most_probable_score,
     penalty_shootout_favorite,
 )
+from .sources import news as news_source
 from .sources.elo import make_elo_source
 from .sources.odds import load_probabilities as load_odds_probabilities
 from .sources.openligadb import Match, fetch_competition
 from .teams import is_knockout_stage
 
-MODEL_VERSION = "dixon-coles-elo-2-market-llm"
+MODEL_VERSION = "dixon-coles-elo-3-market-llm-news"
 
 
 def outcome_probabilities(matrix: np.ndarray) -> dict[str, float]:
@@ -182,6 +183,30 @@ def predict_matches(
             llm_text, source = llm.generate_begruendung(context, groq_api_key, llm_model)
             begruendung = llm_text or template_text
 
+        # Schatten-Anpassung (concept.md Schicht 3, Teil 1): läuft NUR geloggt
+        # mit, ändert nie den echten Tipp - siehe engine/llm.py und
+        # engine/learn.py (Vertrauensregler entscheidet später über scharf-
+        # schalten anhand der hier gesammelten Schattentipper-Punkte).
+        llm_adjustment = None
+        news_cfg = config.get("llm", {}).get("adjustment", {})
+        if news_cfg.get("enabled") and groq_api_key:
+            news = news_source.fetch_snippets(
+                m.home_name, m.away_name, max_age_days=news_cfg.get("max_news_age_days", 5), now=m.kickoff_utc
+            )
+            proposal = llm.propose_adjustment(
+                {"home": m.home_name, "away": m.away_name, "tip": tip}, news, groq_api_key, llm_model
+            )
+            if proposal is not None:
+                adjusted = (
+                    max(0, tip[0] + proposal["home_delta"]),
+                    max(0, tip[1] + proposal["away_delta"]),
+                )
+                llm_adjustment = {
+                    "tip": list(adjusted),
+                    "grund": proposal["grund"],
+                    "news_count": len(news),
+                }
+
         predictions.append(
             {
                 "home": m.home_name,
@@ -202,6 +227,7 @@ def predict_matches(
                         elo_favorite_tip((elo or {}).get(m.home_key), (elo or {}).get(m.away_key))
                     ),
                     "always_draw": list(ALWAYS_DRAW_TIP),
+                    **({"llm_adjusted": llm_adjustment["tip"]} if llm_adjustment else {}),
                 },
                 "factors": {
                     "expected_goals": [round(lam, 2), round(mu, 2)],
@@ -220,6 +246,10 @@ def predict_matches(
                     ),
                     "home_advantage": round(model.params.home_adv, 3),
                     "trained_on_matches": len([t for t in train if t.has_result]),
+                    # Schatten-Anpassungsvorschlag des LLM (siehe oben); None,
+                    # wenn keine News-Quelle vorhanden war oder kein harter
+                    # Grund gefunden wurde
+                    "llm_adjustment": llm_adjustment,
                 },
                 "begruendung": begruendung,
                 # "llm" oder "template" - Transparenz, welche Quelle den Text

@@ -67,6 +67,13 @@ llm:
   enabled: true
   provider: groq
   model: llama-3.3-70b-versatile
+  # Schatten-Anpassungsvorschlag (concept.md Schicht 3, Teil 1): läuft NUR
+  # geloggt/bewertet mit (siehe evaluate.py "llm_adjusted"), ändert NIE den
+  # echten Tipp. Ob er irgendwann scharf geschaltet wird, entscheidet der
+  # Vertrauensregler in engine/learn.py anhand der gesammelten Punkte.
+  adjustment:
+    enabled: true
+    max_news_age_days: 5 # RSS-Schlagzeilen älter als das zählen nicht mehr
 
 backtest:
   # Vereinsfußball: rollierend über die letzten 3 Bundesliga-Saisons

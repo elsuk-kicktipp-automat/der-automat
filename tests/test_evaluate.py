@@ -70,8 +70,12 @@ class TestShadowAndCalibration:
         # Kanada 2:2: most_probable 1:1 -> 2 (Remis-Tendenz), elo_favorite 2:1 -> 0,
         # always_draw 1:1 -> 2. Paraguay 0:2 (abgeleitet): elo_favorite 1:2 -> 2,
         # always_draw 1:1 -> 0.
-        assert report["shadow_points"] == {"most_probable": 2, "elo_favorite": 2, "always_draw": 2}
-        assert report["shadow_matches"] == {"most_probable": 1, "elo_favorite": 2, "always_draw": 2}
+        assert report["shadow_points"] == {
+            "most_probable": 2, "elo_favorite": 2, "always_draw": 2, "llm_adjusted": 0,
+        }
+        assert report["shadow_matches"] == {
+            "most_probable": 1, "elo_favorite": 2, "always_draw": 2, "llm_adjusted": 0,
+        }
 
     def test_brier_score_against_draw_outcome(self):
         report = evaluate_matchday(MATCHDAY, RESULTS, SCHEME)

@@ -1,17 +1,24 @@
-"""LLM-Begründungsschicht (concept.md Schicht 3, Groq Free Tier).
+"""LLM-Schicht: Begründungstexte + Anpassungsvorschlag (concept.md Schicht 3,
+Groq Free Tier).
 
-Ersetzt die Template-Begründung durch einen vom LLM formulierten Analysetext,
-der dieselben Modellzahlen in flüssigerer Sprache einordnet.
+Begründung: ersetzt die Template-Begründung durch einen vom LLM formulierten
+Analysetext, der dieselben Modellzahlen in flüssigerer Sprache einordnet.
 
-Passt (noch) NICHT den Tipp an: eine echte Sanity-Check-Anpassung bräuchte
-Kontext wie Verletzungen/Sperren (News-Dossier), den es in dieser Ausbaustufe
-noch nicht gibt – ohne solche Fakten wäre eine LLM-Anpassung nur geraten statt
-begründet. Das ist Schicht 3 aus concept.md nur teilweise umgesetzt (Begründung
-ja, Anpassung erst mit News-Anbindung).
+Anpassungsvorschlag: Mit News-Schnipseln (engine/sources/news.py) darf das LLM
+einen Tipp innerhalb von ±1 Tor vorschlagen – aber nur mit konkretem Grund
+(Verletzung, Sperre, Rotation), nicht auf Basis von nichts. Läuft aktuell im
+Schatten-Modus: der Vorschlag wird nur geloggt und als eigener Schattentipper
+bewertet (siehe evaluate.py), er ändert NICHT den echten/versiegelten Tipp.
+Erst wenn Phase 5 belegt, dass er über mehrere Spieltage Punkte bringt, wird
+er scharf geschaltet (LLM-Vertrauensregler, engine/learn.py).
 
-Fällt das LLM aus (kein Key, Netzwerkfehler, Rate-Limit), bleibt die
-Template-Begründung aktiv – das System bleibt immer funktionsfähig.
+Fällt das LLM aus (kein Key, Netzwerkfehler, Rate-Limit) oder gibt es keine
+News-Schnipsel, bleibt die Template-Begründung bzw. bleibt die Anpassung aus –
+das System bleibt immer funktionsfähig.
 """
+
+import json
+import re
 
 import requests
 
@@ -47,7 +54,9 @@ def build_prompt(match_context: dict) -> str:
     return "\n".join(lines)
 
 
-def call_groq(prompt: str, api_key: str, model: str = DEFAULT_MODEL) -> str | None:
+def call_groq(
+    prompt: str, api_key: str, model: str = DEFAULT_MODEL, temperature: float = 0.4, max_tokens: int = 300
+) -> str | None:
     """Best-effort Chat-Completion; None bei jedem Fehler (Fallback greift dann)."""
     try:
         resp = requests.post(
@@ -56,8 +65,8 @@ def call_groq(prompt: str, api_key: str, model: str = DEFAULT_MODEL) -> str | No
             json={
                 "model": model,
                 "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.4,
-                "max_tokens": 300,
+                "temperature": temperature,
+                "max_tokens": max_tokens,
             },
             timeout=20,
         )
@@ -65,7 +74,7 @@ def call_groq(prompt: str, api_key: str, model: str = DEFAULT_MODEL) -> str | No
         text = resp.json()["choices"][0]["message"]["content"].strip()
         return text or None
     except (requests.RequestException, KeyError, IndexError, ValueError) as exc:
-        print(f"Groq-LLM nicht verfügbar, falle auf Template-Begründung zurück: {exc}")
+        print(f"Groq-LLM nicht verfügbar: {exc}")
         return None
 
 
@@ -78,3 +87,70 @@ def generate_begruendung(
         return None, "template"
     text = call_groq(build_prompt(match_context), api_key, model)
     return (text, "llm") if text else (None, "template")
+
+
+def build_adjustment_prompt(match_context: dict, news: list[dict]) -> str:
+    home, away = match_context["home"], match_context["away"]
+    tip = match_context["tip"]
+    lines = [
+        f"Fußballspiel: {home} (Heim) gegen {away} (Auswärts).",
+        f"Statistischer Tipp (Punkte-Erwartungswert-optimal): {tip[0]}:{tip[1]}.",
+        "Aktuelle Schlagzeilen (unsortiert, nicht alle relevant):",
+    ]
+    for item in news:
+        lines.append(f"- [{item['source']}] {item['title']}: {item['description']}")
+    lines.append(
+        "Gibt es unter diesen Schlagzeilen einen KONKRETEN harten Grund (Verletzung/Sperre "
+        "eines Schlüsselspielers, Trainerwechsel kurz vor dem Spiel, angekündigte Schonung "
+        "vor einem wichtigeren Spiel), der im statistischen Modell nicht steckt und eine "
+        "Anpassung um höchstens 1 Tor pro Team rechtfertigt? Wenn nein, oder wenn die "
+        "Schlagzeilen nur allgemeine Spielberichte/Analysen ohne harten Fakt sind, antworte "
+        "mit adjust=false. Antworte NUR mit einem einzeiligen JSON-Objekt, keine Erklärung "
+        "davor oder danach, exakt in diesem Format: "
+        '{"adjust": true oder false, "home_delta": -1/0/1, "away_delta": -1/0/1, "grund": "kurzer Satz"}'
+    )
+    return "\n".join(lines)
+
+
+def parse_adjustment_response(text: str) -> dict | None:
+    """Extrahiert und validiert das JSON-Objekt; None bei jedem Parse-/Schema-
+    fehler oder wenn adjust=false (dann gibt es nichts anzuwenden)."""
+    match = re.search(r"\{.*\}", text, re.DOTALL)
+    if not match:
+        return None
+    try:
+        data = json.loads(match.group(0))
+    except json.JSONDecodeError:
+        return None
+
+    if not isinstance(data, dict) or not data.get("adjust"):
+        return None
+
+    def clamp(value) -> int | None:
+        try:
+            return max(-1, min(1, int(value)))
+        except (TypeError, ValueError):
+            return None
+
+    home_delta, away_delta = clamp(data.get("home_delta")), clamp(data.get("away_delta"))
+    if home_delta is None or away_delta is None or (home_delta == 0 and away_delta == 0):
+        return None
+
+    return {
+        "home_delta": home_delta,
+        "away_delta": away_delta,
+        "grund": str(data.get("grund", ""))[:300],
+    }
+
+
+def propose_adjustment(
+    match_context: dict, news: list[dict], api_key: str | None, model: str = DEFAULT_MODEL
+) -> dict | None:
+    """Schattentipp-Vorschlag (siehe Modul-Docstring) oder None, wenn keine
+    News vorliegen, das LLM ausfällt oder kein harter Grund gefunden wurde."""
+    if not api_key or not news:
+        return None
+    text = call_groq(build_adjustment_prompt(match_context, news), api_key, model, temperature=0.2, max_tokens=200)
+    if not text:
+        return None
+    return parse_adjustment_response(text)

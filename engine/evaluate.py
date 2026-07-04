@@ -7,19 +7,24 @@ müssen nicht gewertet werden – ihr Spiel hat noch nicht stattgefunden.
 
 Zusätzlich (concept.md Schicht 4):
 - Schattentipper: parallel geführte Vergleichsstrategien (wahrscheinlichstes
-  Ergebnis, ELO-Favorit 2:1, immer 1:1) werden mit abgerechnet.
-- Kalibrierung: Brier-Score der Heimsieg/Remis/Auswärtssieg-
-  Wahrscheinlichkeiten gegen den realen Ausgang (0 = perfekt, kleiner = besser).
+  Ergebnis, ELO-Favorit 2:1, immer 1:1, LLM-Anpassung) werden mit abgerechnet.
+  "llm_adjusted" ist nur dort gesetzt, wo das LLM einen news-gestützten
+  Anpassungsvorschlag gemacht hat (siehe engine/llm.py) - läuft im Schatten,
+  ändert nicht den echten Tipp; erst engine/learn.py entscheidet anhand dieser
+  Werte, ob er irgendwann scharf geschaltet wird.
+- Kalibrierung: Brier-Score und Log-Loss der Heimsieg/Remis/Auswärtssieg-
+  Wahrscheinlichkeiten gegen den realen Ausgang (kleiner = besser, 0 = perfekt).
 """
 
 import json
+import math
 
 from .config import MANUAL_RESULTS_DIR, MATCHDAYS_DIR, PROJECT_ROOT, RESULTS_DIR
 from .optimizer import ALWAYS_DRAW_TIP, elo_favorite_tip, match_points
 from .sources.openligadb import fetch_competition
 from .teams import is_knockout_stage, normalize
 
-SHADOW_TIPPERS = ("most_probable", "elo_favorite", "always_draw")
+SHADOW_TIPPERS = ("most_probable", "elo_favorite", "always_draw", "llm_adjusted")
 
 
 def _advance_sides(m: dict, result: tuple[int, int], advancers: dict | None) -> tuple[str | None, str | None]:
