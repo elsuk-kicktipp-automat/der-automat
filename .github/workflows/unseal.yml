@@ -1,10 +1,10 @@
-# Entsiegelt Tipps ab 5 Minuten nach Anstoß und rechnet direkt ab.
-# Läuft alle 30 Minuten; ohne fällige Spiele endet der Job nach Sekunden.
+# Entsiegelt Tipps ab 2 Minuten nach Anstoß und rechnet direkt ab.
+# Läuft alle 5 Minuten; ohne fällige Spiele endet der Job nach Sekunden.
 name: Entsiegeln
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -28,7 +28,7 @@ jobs:
             now=$(date -u +%s)
             for f in data/matchdays/*.json; do
               if jq -e --argjson now "$now" \
-                '[.matches[] | select(.status == "sealed") | .kickoff_utc | fromdateiso8601] | any(. + 300 < $now)' \
+                '[.matches[] | select(.status == "sealed") | .kickoff_utc | fromdateiso8601] | any(. + 120 <= $now)' \
                 "$f" >/dev/null; then
                 pending=true
                 break
