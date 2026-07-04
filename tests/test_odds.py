@@ -3,7 +3,12 @@ import json
 import pytest
 
 import engine.sources.odds as odds_module
-from engine.sources.odds import fetch_raw_odds, load_probabilities, parse_probabilities
+from engine.sources.odds import (
+    fetch_raw_odds,
+    load_probabilities,
+    parse_betting_markets,
+    parse_probabilities,
+)
 
 RAW_EVENT = {
     "id": "abc123",
@@ -13,6 +18,7 @@ RAW_EVENT = {
     "bookmakers": [
         {
             "key": "pinnacle",
+            "title": "Pinnacle",
             "markets": [
                 {
                     "key": "h2h",
@@ -25,7 +31,8 @@ RAW_EVENT = {
             ],
         },
         {
-            "key": "bet365",
+            "key": "tipico_de",
+            "title": "Tipico (DE)",
             "markets": [
                 {
                     "key": "h2h",
@@ -104,6 +111,23 @@ class TestParseProbabilities:
 
     def test_empty_input(self, mapping_env):
         assert parse_probabilities([]) == {}
+
+
+class TestParseBettingMarkets:
+    def test_prefers_tipico_when_available(self, mapping_env):
+        result = parse_betting_markets([RAW_EVENT], preferred_bookmakers=["tipico_de"])
+        market = result[("fcbayernmunchen", "borussiadortmund")]
+        assert market["source"] == "tipico_de"
+        assert market["source_label"] == "Tipico (DE)"
+        assert market["odds"]["home"] == 1.75
+        assert market["bookmaker_count"] == 2
+
+    def test_falls_back_to_market_average(self, mapping_env):
+        result = parse_betting_markets([RAW_EVENT], preferred_bookmakers=["missing_book"])
+        market = result[("fcbayernmunchen", "borussiadortmund")]
+        assert market["source"] == "market_average"
+        assert market["odds"]["home"] == pytest.approx((1.80 + 1.75) / 2)
+        assert market["odds"]["away"] == pytest.approx((4.50 + 4.75) / 2)
 
 
 class TestFetchAndCache:

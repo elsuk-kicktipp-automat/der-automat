@@ -75,6 +75,6 @@ jobs:
 
       - name: Site-Deploy anstoßen
         if: steps.commit.outputs.changed == 'true'
-        run: gh workflow run deploy-site.yml --ref main
+        run: gh workflow run deploy-site.yml --ref ${{ github.ref_name }}
         env:
           GH_TOKEN: ${{ github.token }}

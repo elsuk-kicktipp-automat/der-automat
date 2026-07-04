@@ -21,6 +21,7 @@ import math
 
 from .config import MANUAL_RESULTS_DIR, MATCHDAYS_DIR, PROJECT_ROOT, RESULTS_DIR
 from .optimizer import ALWAYS_DRAW_TIP, elo_favorite_tip, match_category, match_points
+from .paper_betting import settle_paper_bet
 from .sources.openligadb import fetch_competition
 from .teams import is_knockout_stage, normalize
 
@@ -104,6 +105,8 @@ def evaluate_matchday(
     shadow_matches = {name: 0 for name in SHADOW_TIPPERS}
     brier_sum, brier_n = 0.0, 0
     advance_total, advance_scored = 0, 0
+    bet_stake, bet_payout, bet_profit = 0.0, 0.0, 0.0
+    bets_scored, bets_won = 0, 0
 
     for m in matchday["matches"]:
         entry = {k: m[k] for k in ("home", "away", "kickoff_utc", "status")}
@@ -143,7 +146,22 @@ def evaluate_matchday(
                     }
                     advance_total += pts
                     advance_scored += 1
+
+            if m.get("paper_bet"):
+                entry["paper_bet"] = m["paper_bet"]
+                settled = settle_paper_bet(m["paper_bet"], result)
+                if settled is not None:
+                    entry["paper_bet_result"] = settled
+                    bet_stake += settled["stake_eur"]
+                    bet_payout += settled["payout_eur"]
+                    bet_profit += settled["profit_eur"]
+                    if settled["outcome"] in ("won", "lost"):
+                        bets_scored += 1
+                    if settled["outcome"] == "won":
+                        bets_won += 1
         matches.append(entry)
+
+    bet_roi = bet_profit / bet_stake if bet_stake else None
 
     return {
         "competition": matchday["competition"],
@@ -160,6 +178,14 @@ def evaluate_matchday(
         "brier_avg": round(brier_sum / brier_n, 4) if brier_n else None,
         "advance_points_total": advance_total,
         "advance_scored": advance_scored,
+        "paper_betting": {
+            "stake_total_eur": round(bet_stake, 2),
+            "payout_total_eur": round(bet_payout, 2),
+            "profit_total_eur": round(bet_profit, 2),
+            "roi": round(bet_roi, 4) if bet_roi is not None else None,
+            "bets_scored": bets_scored,
+            "bets_won": bets_won,
+        },
         "matches": matches,
     }
 

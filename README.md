@@ -45,7 +45,12 @@ ist Phase 4.
    Ergebnis wird auf einen Blend aus Markt- und Modellmeinung optimiert, die
    relative Form (Dixon-Coles-rho) bleibt vom Modell bestimmt. Cache pro
    Kalendertag hält den Verbrauch weit unter dem Freikontingent.
-7. **LLM-Begründung:** [Groq](https://console.groq.com) (Free Tier,
+7. **Paper-Betting:** rein theoretische 1X2-Wetten ohne echte Wettabgabe.
+   Referenz ist `tipico_de`, falls verfügbar; sonst wird der Durchschnitt der
+   gelieferten Bookmaker-Quoten genutzt. Der Einsatz wird per konservativem
+   Fractional-Kelly aus der rohen Modellwahrscheinlichkeit vor Markt-Blend
+   berechnet und bei 100 EUR gedeckelt (`paper_betting` in `config.yaml`).
+8. **LLM-Begründung:** [Groq](https://console.groq.com) (Free Tier,
    `llama-3.3-70b-versatile`) formuliert den Begründungstext aus denselben
    Modellzahlen in natürlicher Sprache; ohne Key/Netzwerk springt automatisch
    die Template-Begründung ein. Passt **nicht** den Tipp an – eine begründete
@@ -93,7 +98,7 @@ Klartext-Tipps liegen **nie** vor Anstoß im öffentlichen Repo
 (`data/predictions/` ist gitignored). Stattdessen (concept.md §5):
 
 1. **Versiegeln:** Pro Spiel wird nur der SHA-256-Hash von
-   `(Teams, Anstoß, Tipp, Begründung, Salt)` veröffentlicht
+   `(Teams, Anstoß, Tipp, Begründung, Paper-Bet, Salt)` veröffentlicht
    (`data/matchdays/`); der Klartext liegt Fernet-verschlüsselt in
    `data/sealed/*.enc`. Schlüssel: `SEAL_SECRET` (GitHub Actions Secret /
    lokale `.env`). Der Commit-Zeitstempel beweist den Zeitpunkt.
@@ -108,6 +113,10 @@ GitHub Actions übernimmt den Betrieb (`.github/workflows/`):
 | `spieltag.yml` | stündlich | predict (Spiele im 4h-Fenster vor Anstoß) → seal → evaluate → Commit → Kicktipp-Abgabe (verifiziert, aus den versiegelten .enc) |
 | `unseal.yml` | alle 30 min | fällige Tipps enthüllen + abrechnen (früher Abbruch ohne fällige Spiele) |
 | `deploy-site.yml` | bei Daten-/Site-Änderungen | Astro-Build → GitHub Pages |
+
+Der Feature-Branch `feature/paper-betting` ist für Tests ebenfalls in
+`test.yml` und `deploy-site.yml` freigeschaltet. Manuelle Spieltags-/Unseal-Läufe
+auf diesem Branch triggern den Site-Deploy mit demselben Branch-Ref.
 
 K.o.-Pläne mit Platzhaltern („Sieger SF 12") werden unterstützt: Sobald
 Nachzügler-Paarungen feststehen, versiegelt der nächste Lauf sie als weiteren
