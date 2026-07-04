@@ -147,6 +147,11 @@ class DixonColes:
         bounds.append((None, None) if use_elo else (0.0, 0.0))             # beta
 
         result = minimize(nll, x0, method="L-BFGS-B", bounds=bounds)
+        if not result.success:
+            # L-BFGS-B liefert auch bei Abbruch den besten Zwischenstand -
+            # mit Warmstart + L2-Regularisierung praktisch immer brauchbar,
+            # aber im Log sichtbar machen, falls sich Fits häufen sollten.
+            print(f"Warnung: Dixon-Coles-Fit nicht konvergiert ({result.message}), nutze besten Zwischenstand.")
 
         theta = result.x
         self.params = FittedParams(

@@ -114,7 +114,7 @@ def build_begruendung(
 
     if llm_adjustment:
         sentences.append(
-            f"Von {llm_adjustment['news_count']} geprüften aktuellen Schlagzeilen lieferte eine "
+            f"Eine der {llm_adjustment['news_count']} geprüften aktuellen Schlagzeilen lieferte "
             f"einen möglichen Grund für eine Anpassung auf {llm_adjustment['tip'][0]}:"
             f"{llm_adjustment['tip'][1]} ({llm_adjustment['grund']}) - das läuft nur als "
             "Schattentipp mit und ändert nicht den hier gezeigten, offiziellen Tipp."
@@ -188,6 +188,7 @@ def predict_matches(
     elo = load_elo(config, team_type, ref_date.date())
     model = build_model(config, neutral_venue, team_type)
     model.fit(train, ref_date, elo=elo)
+    trained_n = len([t for t in train if t.has_result])
 
     scheme = config["kicktipp"]["points"]
     max_tip = config["model"]["max_tip_goals"]
@@ -263,7 +264,7 @@ def predict_matches(
                 "market_probabilities": market_probs,
                 "market_weight": market_weight,
                 "elo": elo_values,
-                "trained_on_matches": len([t for t in train if t.has_result]),
+                "trained_on_matches": trained_n,
                 "news_checked": news_checked,
                 "llm_adjustment": llm_adjustment,
             }
@@ -302,7 +303,7 @@ def predict_matches(
                         else None
                     ),
                     "home_advantage": round(model.params.home_adv, 3),
-                    "trained_on_matches": len([t for t in train if t.has_result]),
+                    "trained_on_matches": trained_n,
                     # Anzahl geprüfter Schlagzeilen (None = News-Check war aus);
                     # llm_adjustment ist der Schatten-Anpassungsvorschlag des
                     # LLM (siehe oben), None wenn kein harter Grund gefunden wurde
@@ -393,7 +394,7 @@ def _covered_pairings(stem: str) -> set[tuple[str, str]]:
     for path in [MATCHDAYS_DIR / f"{stem}.json", *PREDICTIONS_DIR.glob(f"{stem}*.json")]:
         if path.exists():
             data = json.loads(path.read_text(encoding="utf-8"))
-            covered |= {(m["home"], m["away"]) for m in data["matches"]}
+            covered |= {(m["home"], m["away"]) for m in data.get("matches", [])}
     return covered
 
 

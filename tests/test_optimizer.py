@@ -3,6 +3,7 @@ import pytest
 
 from engine.optimizer import (
     ALWAYS_DRAW_TIP,
+    match_category,
     DEFAULT_SCHEME,
     best_tip,
     elo_favorite_tip,
@@ -163,3 +164,22 @@ class TestPenaltyShootoutFavorite:
         side, p = penalty_shootout_favorite({"home": 0.0, "draw": 1.0, "away": 0.0})
         assert side == "home"
         assert p == pytest.approx(0.5)
+
+
+class TestMatchCategory:
+    def test_categories(self):
+        assert match_category((2, 1), (2, 1)) == "exact"
+        assert match_category((2, 1), (3, 2)) == "goal_diff"
+        assert match_category((2, 1), (3, 0)) == "tendency"
+        assert match_category((1, 1), (2, 2)) == "tendency"  # Remis: nie goal_diff
+        assert match_category((2, 1), (0, 1)) == "miss"
+
+    def test_unambiguous_even_with_equal_point_values(self):
+        # Bei Schemas mit gleichen Punktwerten (z.B. goal_diff == tendency)
+        # wäre ein Rückschluss über den Punktwert mehrdeutig - die Kategorie
+        # selbst bleibt eindeutig.
+        scheme = {"exact": 4, "goal_diff": 3, "tendency": 3}
+        assert match_points((2, 1), (3, 2), scheme) == 3
+        assert match_category((2, 1), (3, 2)) == "goal_diff"
+        assert match_points((2, 1), (3, 0), scheme) == 3
+        assert match_category((2, 1), (3, 0)) == "tendency"

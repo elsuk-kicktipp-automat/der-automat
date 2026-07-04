@@ -15,19 +15,29 @@ import numpy as np
 DEFAULT_SCHEME = {"exact": 4, "goal_diff": 3, "tendency": 2}
 
 
-def match_points(tip: tuple[int, int], result: tuple[int, int], scheme: dict = DEFAULT_SCHEME) -> int:
-    """Kicktipp-Punkte für einen Tipp gegen das reale Ergebnis (nach 90 Minuten)."""
+def match_category(tip: tuple[int, int], result: tuple[int, int]) -> str:
+    """Trefferkategorie eines Tipps: "exact" | "goal_diff" | "tendency" | "miss".
+
+    Eigenständig statt Rückschluss über den Punktwert - bei Schemas, in denen
+    zwei Kategorien denselben Punktwert haben, wäre der Rückschluss mehrdeutig.
+    """
     tip_h, tip_a = tip
     res_h, res_a = result
     tip_diff, res_diff = tip_h - tip_a, res_h - res_a
     if (tip_h, tip_a) == (res_h, res_a):
-        return scheme["exact"]
+        return "exact"
     if tip_diff == res_diff:
         # Unentschieden: richtige "Differenz" ist nur die richtige Tendenz
-        return scheme["tendency"] if tip_diff == 0 else scheme["goal_diff"]
+        return "tendency" if tip_diff == 0 else "goal_diff"
     if np.sign(tip_diff) == np.sign(res_diff):
-        return scheme["tendency"]
-    return 0
+        return "tendency"
+    return "miss"
+
+
+def match_points(tip: tuple[int, int], result: tuple[int, int], scheme: dict = DEFAULT_SCHEME) -> int:
+    """Kicktipp-Punkte für einen Tipp gegen das reale Ergebnis (nach 90 Minuten)."""
+    category = match_category(tip, result)
+    return 0 if category == "miss" else scheme[category]
 
 
 def expected_points(tip: tuple[int, int], matrix: np.ndarray, scheme: dict = DEFAULT_SCHEME) -> float:

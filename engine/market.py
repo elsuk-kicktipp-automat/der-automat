@@ -51,5 +51,7 @@ def blend_with_market(
         return sum((p[k] - target[k]) ** 2 for k in p)
 
     result = minimize(objective, x0=np.zeros(2), method="Nelder-Mead")
+    if not result.success:
+        print("Warnung: Quoten-Blend nicht konvergiert, nutze besten Zwischenstand.")
     d_home, d_away = result.x
     return model.matrix_from_goals(lam0 * np.exp(d_home), mu0 * np.exp(d_away))

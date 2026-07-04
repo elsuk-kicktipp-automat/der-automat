@@ -2,12 +2,15 @@
 
 Lädt komplette Saisons und cacht die Roh-JSON-Antworten unter data/cache/,
 damit Backtests nicht bei jedem Lauf die API belasten. Ein Wettbewerb kann
-über mehrere OpenLigaDB-Ligen verteilt sein (WM 2026: Gruppenphase 'wm2026'
-+ K.o.-Runde 'mb') – fetch_competition führt sie zusammen.
+über mehrere OpenLigaDB-Ligen verteilt sein – fetch_competition führt sie
+zusammen (aktuell: nur 'wm26').
 
-Wertungsregel: resultTypeID 2 ("Endergebnis") zählt. Bei K.o.-Spielen pflegt
-die Community dort das Ergebnis ohne Elfmeterschießen ("Endergebniss (o.E.)"),
-ein Unentschieden ist also ein gültiger Ausgang.
+Wertungsregel ("nach Elfmeterschießen", wie die Kicktipp-Runde eingestellt
+ist): Es zählt die höchste vorhandene Ausbaustufe des Ergebnisses -
+Elfmeterschießen (resultTypeID 5) vor Verlängerung (4) vor Endergebnis nach
+90 Minuten (2). Explizite Priorität statt Vertrauen in die typeID-2-Semantik:
+OpenLigaDB hat dort schon rückwirkend mal die Summe inkl. Elfmeter, mal das
+reine 90-Minuten-Ergebnis gepflegt.
 """
 
 from dataclasses import dataclass
@@ -22,7 +25,10 @@ from ..teams import is_placeholder, normalize
 
 API_BASE = "https://api.openligadb.de"
 
-FINAL_RESULT_TYPE_ID = 2
+# Höchste Ausbaustufe zuerst: 5 = nach Elfmeterschießen, 4 = nach
+# Verlängerung, 2 = Endergebnis nach 90 Minuten (Kicktipp-Regel "n.E.":
+# Tore aus Verlängerung und Elfmeterschießen zählen zum Wertungsergebnis).
+RESULT_TYPE_PRIORITY = (5, 4, 2)
 
 
 @dataclass(frozen=True)
@@ -60,8 +66,11 @@ class Match:
 
 def _extract_final_score(match_json: dict) -> tuple[int | None, int | None]:
     results = match_json.get("matchResults") or []
+    by_type = {r.get("resultTypeID"): r for r in results}
     final = next(
-        (r for r in results if r.get("resultTypeID") == FINAL_RESULT_TYPE_ID),
+        (by_type[t] for t in RESULT_TYPE_PRIORITY if t in by_type),
+        # Fallback für Alt-Daten ohne bekannte Typen: letzter Eintrag
+        # (= höchste resultOrderID, in der Praxis das Endergebnis)
         results[-1] if results else None,
     )
     if final is None:

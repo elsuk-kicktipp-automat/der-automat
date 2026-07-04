@@ -1,7 +1,10 @@
-requests
-numpy
-scipy
-PyYAML
-pytest
-cryptography
-playwright
+# Gepinnt für reproduzierbare CI-Läufe (der Automat tippt live - ein
+# ungeplanter Major-Bump von numpy/scipy soll den Betrieb nicht brechen).
+# Aktualisieren: Versionen anheben, Tests laufen lassen, committen.
+requests==2.34.2
+numpy==2.5.0
+scipy==1.18.0
+PyYAML==6.0.3
+pytest==9.1.1
+cryptography==49.0.0
+playwright==1.61.0

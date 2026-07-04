@@ -17,7 +17,9 @@ SAMPLE_MATCH = {
     ],
 }
 
-KO_DRAW_MATCH = {
+# Reale wm26-Struktur eines K.o.-Spiels mit Elfmeterschießen (1:1 nach 90,
+# 1:1 nach Verlängerung, 3:5 nach Elfmeterschießen)
+KO_PENALTY_MATCH = {
     "matchID": 88888,
     "matchDateTimeUTC": "2026-06-30T18:00:00Z",
     "group": {"groupName": "Sechzehntelfinale", "groupOrderID": 4, "groupID": 50001},
@@ -26,8 +28,24 @@ KO_DRAW_MATCH = {
     "matchIsFinished": True,
     "matchResults": [
         {"resultTypeID": 1, "resultName": "Halbzeit", "pointsTeam1": 0, "pointsTeam2": 1},
-        {"resultTypeID": 2, "resultName": "Endergebniss (o.E.)", "pointsTeam1": 1, "pointsTeam2": 1},
-        {"resultTypeID": 4, "resultName": "", "pointsTeam1": 2, "pointsTeam2": 1},
+        {"resultTypeID": 2, "resultName": "Endergebnis", "pointsTeam1": 1, "pointsTeam2": 1},
+        {"resultTypeID": 4, "resultName": "nach Verlängerung", "pointsTeam1": 1, "pointsTeam2": 1},
+        {"resultTypeID": 5, "resultName": "nach Elfmeterschießen", "pointsTeam1": 3, "pointsTeam2": 5},
+    ],
+}
+
+# K.o.-Spiel, das in der Verlängerung entschieden wurde (kein Elfmeterschießen)
+KO_EXTRA_TIME_MATCH = {
+    "matchID": 88889,
+    "matchDateTimeUTC": "2026-06-30T21:00:00Z",
+    "group": {"groupName": "Sechzehntelfinale", "groupOrderID": 4, "groupID": 50001},
+    "team1": {"teamId": 100, "teamName": "Argentinien", "shortName": "Argentinien"},
+    "team2": {"teamId": 101, "teamName": "Kap Verde", "shortName": "Kap Verde"},
+    "matchIsFinished": True,
+    "matchResults": [
+        {"resultTypeID": 1, "resultName": "Halbzeit", "pointsTeam1": 1, "pointsTeam2": 0},
+        {"resultTypeID": 2, "resultName": "Endergebnis", "pointsTeam1": 1, "pointsTeam2": 1},
+        {"resultTypeID": 4, "resultName": "nach Verlängerung", "pointsTeam1": 3, "pointsTeam2": 2},
     ],
 }
 
@@ -83,12 +101,17 @@ class TestParseMatches:
         (m,) = parse_matches([SAMPLE_MATCH])
         assert m.kickoff_utc == datetime(2026, 5, 16, 13, 30, tzinfo=timezone.utc)
 
-    def test_ko_match_scores_90_minute_draw(self):
-        # K.o.-Spiel: resultTypeID 2 ("Endergebniss (o.E.)") zählt, nicht das
-        # Ergebnis nach Verlängerung/Elfmeterschießen - Unentschieden ist gültig.
-        (m,) = parse_matches([KO_DRAW_MATCH])
-        assert (m.home_goals, m.away_goals) == (1, 1)
+    def test_ko_penalty_match_counts_full_tally(self):
+        # Kicktipp-Regel "n.E.": gewertet wird die höchste Ausbaustufe -
+        # hier das Elfmeterschießen-Ergebnis (3:5), nicht das 1:1 nach 90.
+        (m,) = parse_matches([KO_PENALTY_MATCH])
+        assert (m.home_goals, m.away_goals) == (3, 5)
         assert m.has_result
+
+    def test_ko_extra_time_match_counts_extra_time_result(self):
+        # Ohne Elfmeterschießen zählt das Ergebnis nach Verlängerung (3:2)
+        (m,) = parse_matches([KO_EXTRA_TIME_MATCH])
+        assert (m.home_goals, m.away_goals) == (3, 2)
 
     def test_placeholder_match_has_no_result(self):
         (m,) = parse_matches([PLACEHOLDER_MATCH])
@@ -139,7 +162,7 @@ class TestFetchAndCache:
         assert len(requested_urls) == 1
 
     def test_fetch_competition_merges_leagues_sorted(self, tmp_path):
-        (tmp_path / "wm2026_2026.json").write_text(json.dumps([KO_DRAW_MATCH]), encoding="utf-8")
+        (tmp_path / "wm2026_2026.json").write_text(json.dumps([KO_PENALTY_MATCH]), encoding="utf-8")
         (tmp_path / "mb_2026.json").write_text(json.dumps([PLACEHOLDER_MATCH]), encoding="utf-8")
         matches = fetch_competition(["wm2026", "mb"], 2026, cache_dir=tmp_path)
         assert [m.home_name for m in matches] == ["Deutschland", "Sieger SF 12"]

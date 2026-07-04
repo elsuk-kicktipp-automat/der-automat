@@ -143,7 +143,7 @@ class TestNeutralVenueAndElo:
 
         def fake_minimize(_nll, x0, method, bounds):
             captured["x0"] = x0.copy()
-            return SimpleNamespace(x=x0)
+            return SimpleNamespace(x=x0, success=True)
 
         monkeypatch.setattr(model_module, "minimize", fake_minimize)
         model.fit(matches, REF_DATE, elo={"teama": 1800.0, "teamb": 1700.0, "teamc": 1600.0})

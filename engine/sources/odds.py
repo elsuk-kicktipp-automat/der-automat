@@ -3,8 +3,8 @@
 Liefert entvigte (um die Buchmacher-Marge bereinigte) Heimsieg-/Remis-/
 Auswärtssieg-Wahrscheinlichkeiten pro Spiel – der stärkste Einzel-Prior fürs
 Modell (siehe concept.md §3). Wegen des knappen Freikontingents wird jede
-Antwort unter dem Spieltag gecacht und nur einmal pro Lauf abgerufen, nicht
-bei jedem Modell-Fit neu (siehe `max_calls_per_matchday` in config.yaml).
+Antwort unter einem Tages-Cache-Tag abgelegt und pro Lauf nur einmal
+abgerufen, nicht bei jedem Modell-Fit neu.
 
 Kein historischer Endpunkt im Free Tier – Backtests laufen daher ohne
 Quoten-Term (config: `model.odds.enabled: false` im Abschnitt `backtest`).

@@ -56,7 +56,7 @@ def build_prompt(match_context: dict) -> str:
     news_checked = match_context.get("news_checked")
     if llm_adjustment:
         lines.append(
-            f"- News-Check: von {llm_adjustment['news_count']} geprüften Schlagzeilen lieferte eine "
+            f"- News-Check: eine der {llm_adjustment['news_count']} geprüften Schlagzeilen lieferte "
             f"einen möglichen Grund ({llm_adjustment['grund']}) für eine Anpassung auf "
             f"{llm_adjustment['tip'][0]}:{llm_adjustment['tip'][1]} - läuft nur als Schattentipp mit, "
             "ändert nicht den unten genannten offiziellen Tipp"

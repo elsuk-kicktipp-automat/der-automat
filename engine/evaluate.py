@@ -20,7 +20,7 @@ import json
 import math
 
 from .config import MANUAL_RESULTS_DIR, MATCHDAYS_DIR, PROJECT_ROOT, RESULTS_DIR
-from .optimizer import ALWAYS_DRAW_TIP, elo_favorite_tip, match_points
+from .optimizer import ALWAYS_DRAW_TIP, elo_favorite_tip, match_category, match_points
 from .sources.openligadb import fetch_competition
 from .teams import is_knockout_stage, normalize
 
@@ -113,11 +113,7 @@ def evaluate_matchday(
             entry.update(tip=m["tip"], result=list(result), points=points)
             total += points
             scored += 1
-            key = next(
-                (k for k in ("exact", "goal_diff", "tendency") if points == scheme[k] and points > 0),
-                "miss",
-            )
-            counts[key] += 1
+            counts[match_category(tuple(m["tip"]), result)] += 1
 
             entry["shadow_points"] = {}
             for name, tip in _shadow_tips(m).items():
