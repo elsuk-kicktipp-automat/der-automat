@@ -67,9 +67,23 @@ def load_odds(config: dict, on_date=None) -> dict[tuple[str, str], dict[str, flo
 
 
 def build_begruendung(
-    m: Match, lam: float, mu: float, probs: dict, tip: tuple, ev: float, advance_tip: dict | None = None
+    m: Match,
+    lam: float,
+    mu: float,
+    probs: dict,
+    tip: tuple,
+    ev: float,
+    advance_tip: dict | None = None,
+    elo: dict | None = None,
+    market_probs: dict | None = None,
+    market_weight: float = 0.0,
+    news_checked: int | None = None,
+    llm_adjustment: dict | None = None,
 ) -> str:
-    """Template-Begründung aus den Modellzahlen (LLM-Schicht kommt in Phase 3)."""
+    """Ausführliche Template-Begründung (LLM-Schicht formuliert bei Bedarf um,
+    siehe engine/llm.py) - nennt explizit, welche Quellen mit welchem Gewicht
+    zur Entscheidung beigetragen haben: ELO-Prior, Buchmacherquoten-Blend,
+    News-Prüfung (Schatten-Anpassung), zum Schluss die Punkteoptimierung."""
     favorit = (
         m.home_name if probs["home"] > max(probs["draw"], probs["away"])
         else m.away_name if probs["away"] > max(probs["draw"], probs["home"])
@@ -79,19 +93,52 @@ def build_begruendung(
         f"Das Modell sieht {favorit} vorn" if favorit
         else "Das Modell sieht ein ausgeglichenes Spiel"
     )
-    text = (
+    sentences = [
         f"{lage} (Heimsieg {probs['home']:.0%}, Remis {probs['draw']:.0%}, "
-        f"Auswärtssieg {probs['away']:.0%}) und erwartet im Schnitt "
-        f"{lam:.1f}:{mu:.1f} Tore. Der Tipp {tip[0]}:{tip[1]} maximiert den "
-        f"Punkte-Erwartungswert ({ev:.2f} Punkte) über alle möglichen Ergebnisse "
-        f"– nicht die Trefferchance auf das exakte Resultat."
+        f"Auswärtssieg {probs['away']:.0%}) und erwartet im Schnitt {lam:.1f}:{mu:.1f} Tore."
+    ]
+
+    if elo and elo.get("home") is not None and elo.get("away") is not None:
+        diff = elo["home"] - elo["away"]
+        sentences.append(
+            f"Die ELO-Bewertung ({elo['home']:.0f} zu {elo['away']:.0f}, Differenz {diff:+.0f}) "
+            "fließt als Prior in die statistische Grundeinschätzung ein."
+        )
+
+    if market_probs is not None and market_weight > 0:
+        sentences.append(
+            f"Die Buchmacherquoten (Heimsieg {market_probs['home']:.0%}, Remis "
+            f"{market_probs['draw']:.0%}, Auswärtssieg {market_probs['away']:.0%}) sind zu "
+            f"{market_weight:.0%} in die Prognose eingerechnet."
+        )
+
+    if llm_adjustment:
+        sentences.append(
+            f"Von {llm_adjustment['news_count']} geprüften aktuellen Schlagzeilen lieferte eine "
+            f"einen möglichen Grund für eine Anpassung auf {llm_adjustment['tip'][0]}:"
+            f"{llm_adjustment['tip'][1]} ({llm_adjustment['grund']}) - das läuft nur als "
+            "Schattentipp mit und ändert nicht den hier gezeigten, offiziellen Tipp."
+        )
+    elif news_checked is not None:
+        if news_checked > 0:
+            schlagzeile = "Schlagzeile" if news_checked == 1 else "Schlagzeilen"
+            sentences.append(
+                f"{news_checked} aktuelle {schlagzeile} wurden auf einen harten Grund für "
+                "eine Anpassung geprüft (Verletzung, Sperre, Rotation), ohne konkreten Treffer."
+            )
+        else:
+            sentences.append("Es wurden keine einschlägigen aktuellen Schlagzeilen zu diesem Spiel gefunden.")
+
+    sentences.append(
+        f"Der Tipp {tip[0]}:{tip[1]} maximiert den Punkte-Erwartungswert ({ev:.2f} Punkte) über "
+        "alle möglichen Ergebnisse – nicht die Trefferchance auf das exakte Resultat."
     )
     if advance_tip:
-        text += (
-            f" Bei Unentschieden nach 90 Minuten tippt das Modell {advance_tip['pick']} "
-            f"als Sieger im Elfmeterschießen ({advance_tip['probability']:.0%})."
+        sentences.append(
+            f"Bei Unentschieden nach 90 Minuten tippt das Modell {advance_tip['pick']} als "
+            f"Sieger im Elfmeterschießen ({advance_tip['probability']:.0%})."
         )
-    return text
+    return " ".join(sentences)
 
 
 def resolve_l2_penalty(model_cfg: dict, team_type: str) -> float:
@@ -171,31 +218,19 @@ def predict_matches(
                 "probability": round(p, 3),
             }
 
-        template_text = build_begruendung(m, lam, mu, probs, tip, ev, advance_tip)
-        begruendung, source = template_text, "template"
-        if llm_cfg.get("enabled"):
-            context = {
-                "home": m.home_name,
-                "away": m.away_name,
-                "stage": m.stage_name,
-                "probabilities": probs,
-                "expected_goals": (lam, mu),
-                "tip": tip,
-                "market_probabilities": market_probs,
-            }
-            llm_text, source = llm.generate_begruendung(context, groq_api_key, llm_model)
-            begruendung = llm_text or template_text
-
         # Schatten-Anpassung (concept.md Schicht 3, Teil 1): läuft NUR geloggt
         # mit, ändert nie den echten Tipp - siehe engine/llm.py und
         # engine/learn.py (Vertrauensregler entscheidet später über scharf-
-        # schalten anhand der hier gesammelten Schattentipper-Punkte).
+        # schalten anhand der hier gesammelten Schattentipper-Punkte). Läuft
+        # VOR der Begründung, damit diese auf den News-Check verweisen kann.
         llm_adjustment = None
+        news_checked = None
         news_cfg = config.get("llm", {}).get("adjustment", {})
         if news_cfg.get("enabled") and groq_api_key:
             news = news_source.fetch_snippets(
                 m.home_name, m.away_name, max_age_days=news_cfg.get("max_news_age_days", 5), now=m.kickoff_utc
             )
+            news_checked = len(news)
             proposal = llm.propose_adjustment(
                 {"home": m.home_name, "away": m.away_name, "tip": tip}, news, groq_api_key, llm_model
             )
@@ -209,6 +244,31 @@ def predict_matches(
                     "grund": proposal["grund"],
                     "news_count": len(news),
                 }
+
+        elo_values = {"home": (elo or {}).get(m.home_key), "away": (elo or {}).get(m.away_key)}
+        template_text = build_begruendung(
+            m, lam, mu, probs, tip, ev, advance_tip,
+            elo=elo_values, market_probs=market_probs, market_weight=market_weight,
+            news_checked=news_checked, llm_adjustment=llm_adjustment,
+        )
+        begruendung, source = template_text, "template"
+        if llm_cfg.get("enabled"):
+            context = {
+                "home": m.home_name,
+                "away": m.away_name,
+                "stage": m.stage_name,
+                "probabilities": probs,
+                "expected_goals": (lam, mu),
+                "tip": tip,
+                "market_probabilities": market_probs,
+                "market_weight": market_weight,
+                "elo": elo_values,
+                "trained_on_matches": len([t for t in train if t.has_result]),
+                "news_checked": news_checked,
+                "llm_adjustment": llm_adjustment,
+            }
+            llm_text, source = llm.generate_begruendung(context, groq_api_key, llm_model)
+            begruendung = llm_text or template_text
 
         predictions.append(
             {
@@ -226,20 +286,14 @@ def predict_matches(
                 # Vergleichsstrategien, abgerechnet in evaluate
                 "shadow_tips": {
                     "most_probable": list(most_probable_score(matrix)),
-                    "elo_favorite": list(
-                        elo_favorite_tip((elo or {}).get(m.home_key), (elo or {}).get(m.away_key))
-                    ),
+                    "elo_favorite": list(elo_favorite_tip(elo_values["home"], elo_values["away"])),
                     "always_draw": list(ALWAYS_DRAW_TIP),
                     **({"llm_adjusted": llm_adjustment["tip"]} if llm_adjustment else {}),
                 },
                 "factors": {
                     "expected_goals": [round(lam, 2), round(mu, 2)],
                     "probabilities": {k: round(v, 3) for k, v in probs.items()},
-                    "elo": {
-                        "home": (elo or {}).get(m.home_key),
-                        "away": (elo or {}).get(m.away_key),
-                        "beta": round(model.params.elo_beta, 4),
-                    },
+                    "elo": {**elo_values, "beta": round(model.params.elo_beta, 4)},
                     # Marktquote (entvigt) und Blend-Gewicht, nur wenn eine
                     # Quote für genau diese Paarung vorlag (siehe engine/market.py)
                     "market": (
@@ -249,9 +303,10 @@ def predict_matches(
                     ),
                     "home_advantage": round(model.params.home_adv, 3),
                     "trained_on_matches": len([t for t in train if t.has_result]),
-                    # Schatten-Anpassungsvorschlag des LLM (siehe oben); None,
-                    # wenn keine News-Quelle vorhanden war oder kein harter
-                    # Grund gefunden wurde
+                    # Anzahl geprüfter Schlagzeilen (None = News-Check war aus);
+                    # llm_adjustment ist der Schatten-Anpassungsvorschlag des
+                    # LLM (siehe oben), None wenn kein harter Grund gefunden wurde
+                    "news_checked": news_checked,
                     "llm_adjustment": llm_adjustment,
                 },
                 "begruendung": begruendung,

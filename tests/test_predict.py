@@ -108,3 +108,52 @@ class TestBuildBegruendungAdvanceTip:
         probs = {"home": 0.355, "draw": 0.371, "away": 0.274}
         text = build_begruendung(_match(), 1.18, 1.02, probs, (1, 1), 1.088)
         assert "Elfmeterschießen" not in text
+
+
+class TestBuildBegruendungFactors:
+    """Die Begründung soll explizit nennen, welche Quellen zur Entscheidung beitrugen."""
+
+    PROBS = {"home": 0.49, "draw": 0.31, "away": 0.20}
+
+    def test_mentions_elo_values_when_present(self):
+        text = build_begruendung(
+            _match(), 1.73, 1.09, self.PROBS, (2, 1), 1.28,
+            elo={"home": 1683.0, "away": 1608.0},
+        )
+        assert "1683" in text and "1608" in text
+        assert "+75" in text  # Differenz
+
+    def test_omits_elo_sentence_when_absent(self):
+        text = build_begruendung(_match(), 1.73, 1.09, self.PROBS, (2, 1), 1.28, elo=None)
+        assert "ELO-Bewertung" not in text
+
+    def test_mentions_market_odds_with_weight(self):
+        text = build_begruendung(
+            _match(), 1.73, 1.09, self.PROBS, (2, 1), 1.28,
+            market_probs={"home": 0.45, "draw": 0.30, "away": 0.25}, market_weight=0.7,
+        )
+        assert "Buchmacherquoten" in text
+        assert "70%" in text
+
+    def test_omits_market_sentence_when_weight_zero(self):
+        text = build_begruendung(
+            _match(), 1.73, 1.09, self.PROBS, (2, 1), 1.28,
+            market_probs={"home": 0.45, "draw": 0.30, "away": 0.25}, market_weight=0.0,
+        )
+        assert "Buchmacherquoten" not in text
+
+    def test_mentions_llm_adjustment_as_shadow_only(self):
+        text = build_begruendung(
+            _match(), 1.73, 1.09, self.PROBS, (2, 1), 1.28,
+            llm_adjustment={"tip": [1, 1], "grund": "Stammtorwart fehlt", "news_count": 3},
+        )
+        assert "Stammtorwart fehlt" in text
+        assert "Schattentipp" in text
+
+    def test_mentions_news_checked_without_finding(self):
+        text = build_begruendung(_match(), 1.73, 1.09, self.PROBS, (2, 1), 1.28, news_checked=3)
+        assert "3 aktuelle Schlagzeile" in text
+
+    def test_mentions_no_news_found(self):
+        text = build_begruendung(_match(), 1.73, 1.09, self.PROBS, (2, 1), 1.28, news_checked=0)
+        assert "keine einschlägigen" in text

@@ -27,29 +27,52 @@ DEFAULT_MODEL = "llama-3.3-70b-versatile"
 
 
 def build_prompt(match_context: dict) -> str:
-    """Kurzes Dossier für die LLM-Analyse – Modellzahlen und Quoten, keine News."""
+    """Ausführliches Dossier für die LLM-Analyse: alle Quellen, die in die
+    Entscheidung eingeflossen sind (Modell, ELO, Quoten, News-Check) - das
+    LLM soll sie im Begründungstext explizit benennen, nicht nur die Zahlen
+    umformulieren."""
     home, away = match_context["home"], match_context["away"]
     probs = match_context["probabilities"]
     lam, mu = match_context["expected_goals"]
     tip = match_context["tip"]
     lines = [
         f"Fußballspiel: {home} (Heim) gegen {away} (Auswärts), {match_context['stage']}.",
-        "Statistisches Modell (Dixon-Coles-Poisson mit ELO-Prior):",
+        "Statistisches Modell (Dixon-Coles-Poisson, trainiert auf "
+        f"{match_context.get('trained_on_matches', '?')} Spielen):",
         f"- Heimsieg {probs['home']:.0%}, Remis {probs['draw']:.0%}, Auswärtssieg {probs['away']:.0%}",
         f"- Erwartete Tore: {home} {lam:.2f} : {mu:.2f} {away}",
     ]
+    elo = match_context.get("elo") or {}
+    if elo.get("home") is not None and elo.get("away") is not None:
+        lines.append(f"- ELO-Bewertung als Prior: {home} {elo['home']:.0f}, {away} {elo['away']:.0f}")
     if match_context.get("market_probabilities"):
         m = match_context["market_probabilities"]
+        weight = match_context.get("market_weight", 0)
         lines.append(
-            f"- Buchmacherquoten (entvigt): Heimsieg {m['home']:.0%}, Remis {m['draw']:.0%}, "
-            f"Auswärtssieg {m['away']:.0%}"
+            f"- Buchmacherquoten (entvigt, zu {weight:.0%} eingerechnet): Heimsieg {m['home']:.0%}, "
+            f"Remis {m['draw']:.0%}, Auswärtssieg {m['away']:.0%}"
+        )
+    llm_adjustment = match_context.get("llm_adjustment")
+    news_checked = match_context.get("news_checked")
+    if llm_adjustment:
+        lines.append(
+            f"- News-Check: von {llm_adjustment['news_count']} geprüften Schlagzeilen lieferte eine "
+            f"einen möglichen Grund ({llm_adjustment['grund']}) für eine Anpassung auf "
+            f"{llm_adjustment['tip'][0]}:{llm_adjustment['tip'][1]} - läuft nur als Schattentipp mit, "
+            "ändert nicht den unten genannten offiziellen Tipp"
+        )
+    elif news_checked is not None:
+        lines.append(
+            f"- News-Check: {news_checked} aktuelle Schlagzeile(n) geprüft, kein harter Grund für "
+            "eine Anpassung gefunden" if news_checked > 0 else "- News-Check: keine einschlägigen aktuellen Schlagzeilen gefunden"
         )
     lines.append(f"- Punkte-Erwartungswert-optimaler Tipp fürs Kicktipp-Schema: {tip[0]}:{tip[1]}")
     lines.append(
-        "Schreibe 3-4 knappe, sachliche Sätze auf Deutsch, die diesen Tipp für Laien "
-        "einordnen. Erkläre kurz, warum der Tipp den Punkte-Erwartungswert maximiert "
-        "(nicht zwingend das wahrscheinlichste Einzelergebnis ist). Keine Anrede, keine "
-        "Überschrift, nur der Fließtext."
+        "Schreibe 5-7 sachliche Sätze auf Deutsch, die diesen Tipp für Laien ausführlich "
+        "einordnen. Benenne dabei explizit, welche der obigen Quellen (Modell, ELO, "
+        "Buchmacherquoten, News-Check) wie zur Einschätzung beigetragen haben, und erkläre, "
+        "warum der Tipp den Punkte-Erwartungswert maximiert (nicht zwingend das "
+        "wahrscheinlichste Einzelergebnis ist). Keine Anrede, keine Überschrift, nur der Fließtext."
     )
     return "\n".join(lines)
 
@@ -85,7 +108,7 @@ def generate_begruendung(
     Aufrufer auf die Template-Begründung zurückfallen soll."""
     if not api_key:
         return None, "template"
-    text = call_groq(build_prompt(match_context), api_key, model)
+    text = call_groq(build_prompt(match_context), api_key, model, max_tokens=450)
     return (text, "llm") if text else (None, "template")
 
 

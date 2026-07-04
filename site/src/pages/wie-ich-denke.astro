@@ -6,31 +6,58 @@ import Layout from '../layouts/Layout.astro';
   <h1>Wie ich denke</h1>
   <p>
     Ich bin ein statistischer Tipper. Keine Bauchgefühle, keine Lieblingsvereine –
-    nur Daten, ein Modell und ein bisschen Erwartungswert-Mathematik.
+    nur Daten, ein Modell und ein bisschen Erwartungswert-Mathematik. Diese Seite
+    listet <em>alle</em> Quellen auf, die in eine Entscheidung einfließen, und
+    erklärt, wie sie zusammenspielen. Bei jedem einzelnen Spiel steht außerdem eine
+    Box „Quellen &amp; Faktoren" mit den konkreten Zahlen für genau dieses Spiel.
   </p>
 
-  <h2>1. Daten</h2>
+  <h2>1. Quellen im Überblick</h2>
+  <ul>
+    <li>
+      <strong>OpenLigaDB</strong> (<a href="https://www.openligadb.de">openligadb.de</a>) –
+      Spielplan, Anstoßzeiten, Ergebnisse. Kostenlos, kein API-Key.
+    </li>
+    <li>
+      <strong>ELO-Ratings</strong> – <a href="http://clubelo.com">clubelo.com</a> für
+      Vereine, <a href="https://eloratings.net">eloratings.net</a> für Nationalteams.
+      Fließt als Prior in die Grundeinschätzung ein.
+    </li>
+    <li>
+      <strong>The Odds API</strong> – Buchmacherquoten mehrerer Wettanbieter, um die
+      Marge bereinigt („entvigt") und mit einem festen Gewicht in die Prognose
+      eingerechnet. Der Markt bündelt das Wissen tausender Wetter und ist als
+      Einzelquelle kaum zu schlagen.
+    </li>
+    <li>
+      <strong>Groq (Llama 3.3 70B)</strong> – formuliert die Begründungstexte in
+      flüssigerer Sprache und prüft Nachrichten auf einen möglichen Grund für eine
+      Tipp-Anpassung (siehe Abschnitt 5).
+    </li>
+    <li>
+      <strong>RSS-News</strong> (Kicker, Sportschau) – aktuelle Schlagzeilen zu beiden
+      Teams als Kontext fürs LLM: Verletzungen, Sperren, Rotation, Trainerwechsel.
+    </li>
+  </ul>
   <p>
-    Spielpläne und Ergebnisse kommen von <a href="https://www.openligadb.de">OpenLigaDB</a>,
-    Stärke-Ratings von <a href="http://clubelo.com">clubelo.com</a> (Vereine) bzw.
-    <a href="https://eloratings.net">eloratings.net</a> (Nationalteams).
+    Fällt eine Quelle aus (kein Netzwerk, kein Key, Rate-Limit), bleibt der Automat
+    trotzdem funktionsfähig – jede Schicht hat einen Fallback auf die einfachere
+    Vorstufe (LLM → Template-Text, Quote → reines Modell, News → keine Anpassung).
   </p>
 
-  <h2>2. Modell</h2>
+  <h2>2. Das statistische Modell</h2>
   <p>
     Ein Dixon-Coles-Poisson-Modell schätzt für jedes Spiel die erwarteten Tore beider
-    Teams – aus Angriffs- und Abwehrstärke (jüngere Spiele zählen mehr), Heimvorteil
-    (bei Turnieren auf neutralem Platz abgeschaltet) und der ELO-Differenz. Daraus
-    entsteht eine vollständige Wahrscheinlichkeitsmatrix aller Ergebnisse von 0:0 bis 6:6.
+    Teams – aus Angriffs- und Abwehrstärke (jüngere Spiele zählen mehr, per
+    Zeitgewichtung), Heimvorteil (bei Turnieren auf neutralem Platz abgeschaltet) und
+    der ELO-Differenz. Daraus entsteht eine vollständige Wahrscheinlichkeitsmatrix
+    aller Ergebnisse von 0:0 bis 6:6.
   </p>
   <p>
-    Wo verfügbar, rücke ich diese Matrix zusätzlich Richtung Buchmacherquote (entvigt,
-    also um die Buchmacher-Marge bereinigt) – der Markt bündelt das Wissen tausender
-    Wetter und ist als Einzelquelle kaum zu schlagen. Das Modell übernimmt trotzdem die
-    Feinarbeit: <em>welche</em> genaue Tordifferenz innerhalb der Heimsieg-/Remis-/
-    Auswärtssieg-Verteilung am wahrscheinlichsten ist, entscheidet weiterhin Angriffs-
-    und Abwehrstärke. Lag für ein Spiel eine Quote vor, steht sie als kleine Zeile
-    unter den Wahrscheinlichkeitsbalken der Spielkarte.
+    Wo eine Buchmacherquote vorliegt, rücke ich diese Matrix zusätzlich Richtung
+    Marktmeinung. Die Feinarbeit – <em>welche</em> genaue Tordifferenz innerhalb der
+    Heimsieg-/Remis-/Auswärtssieg-Verteilung am wahrscheinlichsten ist – entscheidet
+    weiterhin Angriffs- und Abwehrstärke aus dem Modell.
   </p>
 
   <h2>3. Der Kicktipp-Trick</h2>
@@ -42,7 +69,10 @@ import Layout from '../layouts/Layout.astro';
   <p>
     Beispiel: Ein 1:1 mag das wahrscheinlichste Einzelergebnis sein – wenn aber 45 %
     der Wahrscheinlichkeitsmasse auf Heimsiegen liegt, bringt ein Heimsieg-Tipp im
-    Schnitt mehr Punkte.
+    Schnitt mehr Punkte. Bei K.o.-Spielen gilt zusätzlich: Läuft die Kicktipp-Runde
+    unter „nach Elfmeterschießen", geht das gewertete Ergebnis nie unentschieden aus
+    (Tore aus Verlängerung und Elfmeterschießen zählen mit dazu) – ein Remis-Tipp
+    kommt für K.o.-Spiele deshalb gar nicht erst infrage.
   </p>
 
   <h2>4. Fairness-Beweis: versiegelte Tipps</h2>
@@ -70,22 +100,38 @@ print(hashlib.sha256(payload.encode()).hexdigest())"</pre>
     den Zeitpunkt der Versiegelung.
   </p>
 
-  <h2>5. Wer schreibt die Begründungstexte</h2>
+  <h2>5. Begründungstexte &amp; News-Check</h2>
   <p>
-    Die Fließtexte zu jedem Spiel formuliert ein LLM (Llama 3.3 70B über Groq) aus genau
-    den Zahlen, die auch auf der Karte stehen – Modellwahrscheinlichkeiten, erwartete
-    Tore, Quote, der gewählte Tipp. Ein 🤖-Hinweis unter dem Text markiert, wenn das LLM
-    geschrieben hat; ohne Antwort (kein Netzwerk, Rate-Limit) springt automatisch eine
-    Template-Begründung aus denselben Zahlen ein – der Automat bleibt so immer
-    funktionsfähig. Bewusst <em>nicht</em> Teil dieser Schicht: das LLM ändert nie den
-    Tipp selbst. Eine begründete Anpassung (z.B. wegen einer Verletzung) bräuchte eine
-    echte News-Quelle, die es noch nicht gibt – ungestützt zu „korrigieren" wäre nur
-    geraten, nicht analysiert.
+    Die Fließtexte zu jedem Spiel formuliert ein LLM (Llama 3.3 70B über Groq) aus
+    genau den Zahlen, die auch in der „Quellen &amp; Faktoren"-Box stehen –
+    Modellwahrscheinlichkeiten, ELO-Werte, Quote, News-Check-Ergebnis, der gewählte
+    Tipp. Ein 🤖-Hinweis unter dem Text markiert, wenn das LLM geschrieben hat; ohne
+    Antwort (kein Netzwerk, Rate-Limit) springt automatisch eine Template-Begründung
+    aus denselben Zahlen ein.
+  </p>
+  <p>
+    Zusätzlich liest das LLM aktuelle Schlagzeilen zu beiden Teams (Kicker,
+    Sportschau) und darf – nur bei einem konkreten harten Grund wie einer Verletzung,
+    Sperre oder Rotation – eine Anpassung um höchstens ein Tor je Team vorschlagen.
+    Dieser Vorschlag läuft ausschließlich als eigener <strong>Schattentipper</strong>
+    mit (in der Bilanz sichtbar) und ändert <em>nie</em> den echten, versiegelten
+    Tipp. Erst wenn sich über mehrere Spieltage zeigt, dass er tatsächlich Punkte
+    bringt, entscheidet ein Vertrauensregler, ob er scharf geschaltet wird.
   </p>
 
-  <h2>6. Was noch kommt</h2>
+  <h2>6. Die Kicktipp-Abgabe</h2>
   <p>
-    Eine News-Anbindung (Verletzungen, Sperren, Muss-Siege) als Grundlage für echte
-    Tipp-Anpassungen und die automatische Abgabe bei Kicktipp – siehe Roadmap im Repo.
+    Nach der Prognose und vor der Versiegelung trägt ein Bot (Playwright) die Tipps
+    automatisch bei Kicktipp ein – Login, Navigation zur Tippabgabe, Zuordnung über
+    die Team-Namen. Neu hinzugekommene Tipps werden ausgefüllt, bereits vorhandene
+    übersprungen. Vor dem scharfen Einsatz lief ein Dry-Run (Formular ausfüllen,
+    Screenshot, aber nicht abschicken), um die Zuordnung ohne Risiko zu prüfen.
+  </p>
+
+  <h2>7. Was noch kommt</h2>
+  <p>
+    Der Vertrauensregler für die News-Schatten-Anpassung (Abschnitt 5) sowie eine
+    automatische Gewichts-Nachjustierung des Modells anhand der laufenden
+    Kalibrierung (Brier-Score, Log-Loss) – siehe Roadmap im Repo.
   </p>
 </Layout>

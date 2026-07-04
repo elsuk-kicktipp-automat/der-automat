@@ -34,8 +34,37 @@ class TestBuildPrompt:
         assert "Buchmacherquoten" in prompt
 
     def test_omits_market_section_when_absent(self):
+        # Der Anweisungssatz nennt "Buchmacherquoten" generisch als möglichen
+        # Faktor - hier geht es um die konkrete Datenzeile mit Prozentwerten.
         prompt = build_prompt(MATCH_CONTEXT)
-        assert "Buchmacherquoten" not in prompt
+        assert "- Buchmacherquoten" not in prompt
+
+    def test_mentions_elo_when_present(self):
+        context = {**MATCH_CONTEXT, "elo": {"home": 1683.0, "away": 1608.0}}
+        prompt = build_prompt(context)
+        assert "1683" in prompt and "1608" in prompt
+
+    def test_omits_elo_when_absent(self):
+        prompt = build_prompt(MATCH_CONTEXT)
+        assert "- ELO-Bewertung" not in prompt
+
+    def test_includes_llm_adjustment_when_present(self):
+        context = {
+            **MATCH_CONTEXT,
+            "llm_adjustment": {"tip": [1, 1], "grund": "Stammtorwart fehlt", "news_count": 3},
+        }
+        prompt = build_prompt(context)
+        assert "Stammtorwart fehlt" in prompt
+        assert "News-Check" in prompt
+
+    def test_includes_news_checked_without_adjustment(self):
+        context = {**MATCH_CONTEXT, "news_checked": 2}
+        prompt = build_prompt(context)
+        assert "2 aktuelle Schlagzeile" in prompt
+
+    def test_asks_for_longer_source_attributed_text(self):
+        prompt = build_prompt(MATCH_CONTEXT)
+        assert "5-7" in prompt
 
 
 class TestCallGroq:
@@ -88,13 +117,13 @@ class TestGenerateBegruendung:
         assert source == "template"
 
     def test_successful_llm_call(self, monkeypatch):
-        monkeypatch.setattr("engine.llm.call_groq", lambda prompt, key, model: "LLM-Text.")
+        monkeypatch.setattr("engine.llm.call_groq", lambda prompt, key, model, **kw: "LLM-Text.")
         text, source = generate_begruendung(MATCH_CONTEXT, api_key="fake-key")
         assert text == "LLM-Text."
         assert source == "llm"
 
     def test_failed_llm_call_falls_back_to_template(self, monkeypatch):
-        monkeypatch.setattr("engine.llm.call_groq", lambda prompt, key, model: None)
+        monkeypatch.setattr("engine.llm.call_groq", lambda prompt, key, model, **kw: None)
         text, source = generate_begruendung(MATCH_CONTEXT, api_key="fake-key")
         assert text is None
         assert source == "template"

@@ -4,9 +4,15 @@ import { formatKickoff } from '../lib/data.mjs';
 // match: Eintrag aus data/matchdays/*.json, scored: passender Eintrag aus data/results/
 const { match, scored, delay = 0 } = Astro.props;
 const sealed = match.status === 'sealed';
-const probs = match.factors?.probabilities;
-const xg = match.factors?.expected_goals;
-const market = match.factors?.market;
+const factors = match.factors ?? {};
+const probs = factors.probabilities;
+const xg = factors.expected_goals;
+const market = factors.market;
+const elo = factors.elo;
+const hasElo = elo?.home != null && elo?.away != null;
+const eloDiff = hasElo ? Math.round(elo.home - elo.away) : null;
+const llmAdjustment = factors.llm_adjustment;
+const newsChecked = factors.news_checked;
 const pointsClass = scored ? `p${scored.points}` : '';
 ---
 
@@ -56,13 +62,6 @@ const pointsClass = scored ? `p${scored.points}` : '';
             <span><i class="dot dot-away"></i> Auswärts {Math.round(probs.away * 100)} %</span>
             <span class="xg">xG {xg[0]} : {xg[1]}</span>
           </div>
-          {market && (
-            <p class="market-line">
-              Buchmacherquote (entvigt, {Math.round(market.weight * 100)} % Gewicht):
-              Heim {Math.round(market.home * 100)} % · Remis {Math.round(market.draw * 100)} % ·
-              Auswärts {Math.round(market.away * 100)} %
-            </p>
-          )}
         </div>
       )}
 
@@ -72,6 +71,40 @@ const pointsClass = scored ? `p${scored.points}` : '';
           🤖 Begründung von der KI-Analyseschicht formuliert
         </p>
       )}
+
+      <div class="sources">
+        <div class="sources-title">Quellen &amp; Faktoren</div>
+        <ul class="sources-list">
+          <li>
+            Statistisches Modell (Dixon-Coles-Poisson)
+            {factors.trained_on_matches != null && <> · trainiert auf {factors.trained_on_matches} Spielen</>}
+          </li>
+          {hasElo && (
+            <li>
+              ELO-Bewertung: {match.home} {Math.round(elo.home)} · {match.away} {Math.round(elo.away)}
+              {' '}(Differenz {eloDiff > 0 ? '+' : ''}{eloDiff})
+            </li>
+          )}
+          {market && (
+            <li>
+              Buchmacherquoten ({Math.round(market.weight * 100)} % Gewicht): Heim {Math.round(market.home * 100)} % ·
+              Remis {Math.round(market.draw * 100)} % · Auswärts {Math.round(market.away * 100)} %
+            </li>
+          )}
+          {llmAdjustment ? (
+            <li>
+              News-Check: {llmAdjustment.news_count} Schlagzeile{llmAdjustment.news_count === 1 ? '' : 'n'} geprüft –
+              Schattenvorschlag {llmAdjustment.tip[0]}:{llmAdjustment.tip[1]} ({llmAdjustment.grund}), nicht übernommen
+            </li>
+          ) : newsChecked != null ? (
+            <li>
+              News-Check: {newsChecked} Schlagzeile{newsChecked === 1 ? '' : 'n'} geprüft{newsChecked > 0
+                ? ', kein harter Grund für eine Anpassung gefunden'
+                : ' gefunden'}
+            </li>
+          ) : null}
+        </ul>
+      </div>
 
       {match.salt && match.hash && (
         <details class="reveal-proof">
@@ -195,10 +228,32 @@ const pointsClass = scored ? `p${scored.points}` : '';
   .dot-away { background: var(--red); }
   .xg { margin-left: auto; }
 
-  .market-line { margin: 8px 0 0; font-size: 11.5px; color: var(--text-muted); }
-
   .analysis { margin: 16px 22px 0; font-size: 13.5px; line-height: 1.6; color: var(--text-body); }
   .source-tag { margin: 8px 22px 0; font-size: 11.5px; color: var(--text-muted); font-style: italic; }
+
+  .sources {
+    margin: 14px 22px 0;
+    padding: 12px 14px;
+    border-radius: var(--r-panel);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+  }
+  .sources-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .sources-list {
+    margin: 0;
+    padding-left: 1.1em;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-body);
+  }
+  .sources-list li { margin: 2px 0; }
 
   .reveal-proof {
     margin: 14px 22px 0;
