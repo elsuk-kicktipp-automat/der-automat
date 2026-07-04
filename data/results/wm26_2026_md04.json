@@ -1,0 +1,137 @@
+{
+  "competition": "wm26",
+  "season": 2026,
+  "matchday": 4,
+  "stage": "Sechzehntelfinale",
+  "model_version": "dixon-coles-elo-1",
+  "points_total": 10,
+  "matches_scored": 4,
+  "matches_open": 0,
+  "hits": {
+    "exact": 2,
+    "goal_diff": 0,
+    "tendency": 1,
+    "miss": 1
+  },
+  "shadow_points": {
+    "most_probable": 0,
+    "elo_favorite": 5,
+    "always_draw": 8,
+    "llm_adjusted": 0
+  },
+  "shadow_matches": {
+    "most_probable": 0,
+    "elo_favorite": 4,
+    "always_draw": 4,
+    "llm_adjusted": 0
+  },
+  "brier_avg": 0.646,
+  "advance_points_total": 6,
+  "advance_scored": 4,
+  "matches": [
+    {
+      "home": "Schweiz",
+      "away": "Algerien",
+      "kickoff_utc": "2026-07-03T03:00:00Z",
+      "status": "revealed",
+      "tip": [
+        2,
+        1
+      ],
+      "result": [
+        2,
+        0
+      ],
+      "points": 2,
+      "shadow_points": {
+        "always_draw": 0,
+        "elo_favorite": 2
+      },
+      "brier": 0.3968,
+      "advance": {
+        "tip_side": "home",
+        "actual_side": "home",
+        "correct": true,
+        "points": 2
+      }
+    },
+    {
+      "home": "Australien",
+      "away": "Ägypten",
+      "kickoff_utc": "2026-07-03T18:00:00Z",
+      "status": "revealed",
+      "tip": [
+        1,
+        1
+      ],
+      "result": [
+        1,
+        1
+      ],
+      "points": 4,
+      "shadow_points": {
+        "always_draw": 4,
+        "elo_favorite": 0
+      },
+      "brier": 0.5967,
+      "advance": {
+        "tip_side": "home",
+        "actual_side": "away",
+        "correct": false,
+        "points": 0
+      }
+    },
+    {
+      "home": "Argentinien",
+      "away": "Kap Verde",
+      "kickoff_utc": "2026-07-03T22:00:00Z",
+      "status": "revealed",
+      "tip": [
+        2,
+        0
+      ],
+      "result": [
+        1,
+        1
+      ],
+      "points": 0,
+      "shadow_points": {
+        "always_draw": 4,
+        "elo_favorite": 0
+      },
+      "brier": 1.4338,
+      "advance": {
+        "tip_side": "home",
+        "actual_side": "home",
+        "correct": true,
+        "points": 2
+      }
+    },
+    {
+      "home": "Kolumbien",
+      "away": "Ghana",
+      "kickoff_utc": "2026-07-04T01:30:00Z",
+      "status": "revealed",
+      "tip": [
+        1,
+        0
+      ],
+      "result": [
+        1,
+        0
+      ],
+      "points": 4,
+      "shadow_points": {
+        "always_draw": 0,
+        "elo_favorite": 3
+      },
+      "brier": 0.1567,
+      "advance": {
+        "tip_side": "home",
+        "actual_side": "home",
+        "correct": true,
+        "points": 2
+      }
+    }
+  ]
+}
