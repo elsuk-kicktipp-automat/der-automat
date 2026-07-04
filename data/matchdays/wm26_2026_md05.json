@@ -57,7 +57,7 @@
       "away": "Belgien",
       "kickoff_utc": "2026-07-07T00:00:00Z",
       "status": "sealed",
-      "hash": "0f66a37f66f9dc01938f3b05289c55fae9bf03ce9c6bbcf1783f7e510e995ae9",
+      "hash": "0902fb917883a5609af9d7a49a946fe667d2e0456f45ee76f1c14e2d2a654697",
       "paper_bet_status": "sealed"
     },
     {
@@ -77,6 +77,6 @@
       "paper_bet_status": "sealed"
     }
   ],
-  "paper_betting_backfilled_at_utc": "2026-07-04T11:28:14Z",
+  "paper_betting_backfilled_at_utc": "2026-07-04T11:35:36Z",
   "paper_betting_backfill_note": "Test-Nachwetten fuer bereits versiegelte Runde; Paper-Wetten sind ab jetzt im Hash enthalten."
 }

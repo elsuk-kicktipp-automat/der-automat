@@ -65,6 +65,8 @@ def mapping_env(tmp_path, monkeypatch):
                 "_kommentar": "test",
                 "FC Bayern München": "Bayern Munich",
                 "Borussia Dortmund": "Borussia Dortmund",
+                "USA": "USA",
+                "Belgien": "Belgium",
             }
         ),
         encoding="utf-8",
@@ -128,6 +130,32 @@ class TestParseBettingMarkets:
         assert market["source"] == "market_average"
         assert market["odds"]["home"] == pytest.approx((1.80 + 1.75) / 2)
         assert market["odds"]["away"] == pytest.approx((4.50 + 4.75) / 2)
+
+    def test_maps_usa_as_named_by_the_odds_api(self, mapping_env):
+        event = {
+            "home_team": "USA",
+            "away_team": "Belgium",
+            "bookmakers": [
+                {
+                    "key": "tipico_de",
+                    "title": "Tipico",
+                    "markets": [
+                        {
+                            "key": "h2h",
+                            "outcomes": [
+                                {"name": "USA", "price": 2.65},
+                                {"name": "Draw", "price": 3.40},
+                                {"name": "Belgium", "price": 2.65},
+                            ],
+                        }
+                    ],
+                }
+            ],
+        }
+
+        result = parse_betting_markets([event], preferred_bookmakers=["tipico_de"])
+
+        assert result[("usa", "belgien")]["odds"]["away"] == 2.65
 
 
 class TestFetchAndCache:
