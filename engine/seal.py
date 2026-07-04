@@ -63,14 +63,33 @@ def seal_file(
     secret: str,
     matchdays_dir: Path = MATCHDAYS_DIR,
     sealed_dir: Path = SEALED_DIR,
+    now: datetime | None = None,
 ) -> Path | None:
-    """Versiegelt eine Prognose-Datei; None, wenn alles darin schon versiegelt ist.
+    """Versiegelt eine Prognose-Datei; None, wenn nichts (mehr) zu versiegeln ist.
 
     Existiert die öffentliche Spieltags-Datei bereits, werden neue Paarungen
     angehängt (K.o.-Plan: Nachzügler-Batches, wenn Platzhalter feststehen).
+
+    Fairness-Guard (zweite Verteidigungslinie neben dem Tipp-Fenster in
+    predict.py): Spiele, deren Anstoß bereits vorbei ist, werden NIE versiegelt -
+    eine Versiegelung nach Anstoß würde den Beweis "Tipp stand vorher fest"
+    wertlos machen.
     """
+    now = now or datetime.now(timezone.utc)
     pred = json.loads(prediction_path.read_text(encoding="utf-8"))
     public_path = matchdays_dir / public_file_name(pred)
+
+    fresh = [
+        m for m in pred["matches"]
+        if datetime.strptime(m["kickoff_utc"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc) > now
+    ]
+    if len(fresh) < len(pred["matches"]):
+        print(
+            f"{len(pred['matches']) - len(fresh)} Spiel(e) mit bereits erfolgtem "
+            "Anstoß nicht versiegelt (Fairness-Guard)."
+        )
+    if not fresh:
+        return None
 
     if public_path.exists():
         public = json.loads(public_path.read_text(encoding="utf-8"))
@@ -83,7 +102,7 @@ def seal_file(
         public["matches"] = []
 
     covered = {(m["home"], m["away"]) for m in public["matches"]}
-    new_matches = [m for m in pred["matches"] if (m["home"], m["away"]) not in covered]
+    new_matches = [m for m in fresh if (m["home"], m["away"]) not in covered]
     if not new_matches:
         return None
 

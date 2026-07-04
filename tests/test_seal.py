@@ -7,6 +7,9 @@ import pytest
 from engine.seal import canonical_payload, payload_hash, seal_file, unseal_all
 
 SECRET = "test-geheimnis"
+# Fest vor beiden Fixture-Anstößen (17:00/21:00Z) - der Fairness-Guard in
+# seal_file würde sonst greifen, sobald die Echtzeit die Kickoffs überholt.
+SEAL_NOW = datetime(2026, 7, 4, 6, 0, tzinfo=timezone.utc)
 
 PREDICTION = {
     "competition": "wm2026",
@@ -60,7 +63,7 @@ def dirs(tmp_path):
 class TestSeal:
     def test_public_file_contains_hashes_but_no_tips(self, dirs):
         pred_file, matchdays, sealed = dirs
-        public_path = seal_file(pred_file, SECRET, matchdays, sealed)
+        public_path = seal_file(pred_file, SECRET, matchdays, sealed, now=SEAL_NOW)
         text = public_path.read_text(encoding="utf-8")
         public = json.loads(text)
 
@@ -72,24 +75,42 @@ class TestSeal:
 
     def test_encrypted_blob_is_not_plaintext(self, dirs):
         pred_file, matchdays, sealed = dirs
-        seal_file(pred_file, SECRET, matchdays, sealed)
+        seal_file(pred_file, SECRET, matchdays, sealed, now=SEAL_NOW)
         blob = (sealed / "wm2026_2026_md05.enc").read_bytes()
         assert b"Marokko" not in blob
         assert b"tip" not in blob
 
     def test_seal_consumes_prediction_and_is_idempotent(self, dirs):
         pred_file, matchdays, sealed = dirs
-        assert seal_file(pred_file, SECRET, matchdays, sealed) is not None
+        assert seal_file(pred_file, SECRET, matchdays, sealed, now=SEAL_NOW) is not None
         # Klartext-Datei wird nach dem Versiegeln entfernt
         assert not pred_file.exists()
         # Gleiche Paarungen erneut versiegeln: nichts zu tun
         pred_file.write_text(json.dumps(PREDICTION, ensure_ascii=False), encoding="utf-8")
-        assert seal_file(pred_file, SECRET, matchdays, sealed) is None
+        assert seal_file(pred_file, SECRET, matchdays, sealed, now=SEAL_NOW) is None
+
+    def test_never_seals_matches_after_kickoff(self, dirs):
+        """Fairness-Guard: Versiegelung nach Anstoß würde den Beweis
+        'Tipp stand vorher fest' wertlos machen."""
+        pred_file, matchdays, sealed = dirs
+        # Zwischen den beiden Anstößen (17:00 vorbei, 21:00 noch nicht):
+        # nur das 21:00-Spiel darf versiegelt werden
+        between = datetime(2026, 7, 4, 18, 0, tzinfo=timezone.utc)
+        public_path = seal_file(pred_file, SECRET, matchdays, sealed, now=between)
+        public = json.loads(public_path.read_text(encoding="utf-8"))
+        assert [m["home"] for m in public["matches"]] == ["Paraguay"]
+
+    def test_returns_none_when_all_kickoffs_passed(self, dirs):
+        pred_file, matchdays, sealed = dirs
+        after_all = datetime(2026, 7, 5, 0, 0, tzinfo=timezone.utc)
+        assert seal_file(pred_file, SECRET, matchdays, sealed, now=after_all) is None
+        assert not list(matchdays.glob("*.json"))
+        assert not list(sealed.glob("*.enc"))
 
     def test_late_batch_is_appended_to_existing_matchday(self, dirs):
         """K.o.-Plan: Nachzügler-Paarungen kommen als zweiter Batch dazu."""
         pred_file, matchdays, sealed = dirs
-        seal_file(pred_file, SECRET, matchdays, sealed)
+        seal_file(pred_file, SECRET, matchdays, sealed, now=SEAL_NOW)
 
         batch = {**PREDICTION, "matches": [
             {
@@ -103,7 +124,7 @@ class TestSeal:
         ]}
         batch_file = pred_file.parent / "wm2026_2026_md05_b2.json"
         batch_file.write_text(json.dumps(batch, ensure_ascii=False), encoding="utf-8")
-        seal_file(batch_file, SECRET, matchdays, sealed)
+        seal_file(batch_file, SECRET, matchdays, sealed, now=SEAL_NOW)
 
         public = json.loads((matchdays / "wm2026_2026_md05.json").read_text(encoding="utf-8"))
         assert len(public["matches"]) == 3
@@ -121,7 +142,7 @@ class TestSeal:
 class TestUnseal:
     def test_reveals_only_past_kickoffs(self, dirs):
         pred_file, matchdays, sealed = dirs
-        seal_file(pred_file, SECRET, matchdays, sealed)
+        seal_file(pred_file, SECRET, matchdays, sealed, now=SEAL_NOW)
 
         # 17:00-Spiel ist (inkl. 5 min Verzögerung) durch, 21:00-Spiel nicht
         now = datetime(2026, 7, 4, 17, 10, tzinfo=timezone.utc)
@@ -141,7 +162,7 @@ class TestUnseal:
 
     def test_full_reveal_removes_encrypted_blob(self, dirs):
         pred_file, matchdays, sealed = dirs
-        seal_file(pred_file, SECRET, matchdays, sealed)
+        seal_file(pred_file, SECRET, matchdays, sealed, now=SEAL_NOW)
         now = datetime(2026, 7, 5, 0, 0, tzinfo=timezone.utc)
         unseal_all(SECRET, matchdays, sealed, now=now)
         assert not (sealed / "wm2026_2026_md05.enc").exists()
@@ -149,7 +170,7 @@ class TestUnseal:
     def test_revealed_hash_is_verifiable(self, dirs):
         """Der Kern des Fairness-Beweises: Hash aus enthüllten Daten nachrechnen."""
         pred_file, matchdays, sealed = dirs
-        public_path = seal_file(pred_file, SECRET, matchdays, sealed)
+        public_path = seal_file(pred_file, SECRET, matchdays, sealed, now=SEAL_NOW)
         published_hashes = {
             (m["home"], m["away"]): m["hash"]
             for m in json.loads(public_path.read_text(encoding="utf-8"))["matches"]
@@ -179,7 +200,7 @@ class TestUnseal:
 
     def test_wrong_secret_cannot_decrypt(self, dirs):
         pred_file, matchdays, sealed = dirs
-        seal_file(pred_file, SECRET, matchdays, sealed)
+        seal_file(pred_file, SECRET, matchdays, sealed, now=SEAL_NOW)
         with pytest.raises(Exception):
             unseal_all("falsches-geheimnis", matchdays, sealed)
 

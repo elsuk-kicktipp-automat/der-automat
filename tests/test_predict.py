@@ -1,10 +1,11 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import numpy as np
 import pytest
 
 from engine.predict import (
     build_begruendung,
+    in_tip_window,
     build_model,
     load_elo,
     marginal_expected_goals,
@@ -157,3 +158,43 @@ class TestBuildBegruendungFactors:
     def test_mentions_no_news_found(self):
         text = build_begruendung(_match(), 1.73, 1.09, self.PROBS, (2, 1), 1.28, news_checked=0)
         assert "keine einschlägigen" in text
+
+
+class TestTipWindow:
+    """Fairness + Aktualität: getippt wird nur im Fenster (now+margin, now+window]."""
+
+    NOW = datetime(2026, 7, 4, 12, 0, tzinfo=timezone.utc)
+    WINDOW = timedelta(hours=4)
+    MARGIN = timedelta(minutes=20)
+
+    def _match_at(self, kickoff, finished=False, home="Kanada", away="Marokko"):
+        return Match(
+            home_name=home, away_name=away, home_goals=None, away_goals=None,
+            kickoff_utc=kickoff, matchday=5, stage_name="Achtelfinale", finished=finished,
+        )
+
+    def test_match_within_window_is_tippable(self):
+        m = self._match_at(datetime(2026, 7, 4, 15, 0, tzinfo=timezone.utc))  # in 3h
+        assert in_tip_window(m, self.NOW, self.WINDOW, self.MARGIN)
+
+    def test_match_too_far_in_future_is_not_tippable(self):
+        m = self._match_at(datetime(2026, 7, 4, 17, 0, tzinfo=timezone.utc))  # in 5h
+        assert not in_tip_window(m, self.NOW, self.WINDOW, self.MARGIN)
+
+    def test_match_already_started_is_never_tippable(self):
+        m = self._match_at(datetime(2026, 7, 4, 11, 0, tzinfo=timezone.utc))  # vor 1h
+        assert not in_tip_window(m, self.NOW, self.WINDOW, self.MARGIN)
+
+    def test_match_inside_safety_margin_is_not_tippable(self):
+        m = self._match_at(datetime(2026, 7, 4, 12, 10, tzinfo=timezone.utc))  # in 10min < 20min Reserve
+        assert not in_tip_window(m, self.NOW, self.WINDOW, self.MARGIN)
+
+    def test_window_boundary_is_inclusive(self):
+        m = self._match_at(datetime(2026, 7, 4, 16, 0, tzinfo=timezone.utc))  # exakt in 4h
+        assert in_tip_window(m, self.NOW, self.WINDOW, self.MARGIN)
+
+    def test_finished_or_placeholder_is_not_tippable(self):
+        m = self._match_at(datetime(2026, 7, 4, 15, 0, tzinfo=timezone.utc), finished=True)
+        assert not in_tip_window(m, self.NOW, self.WINDOW, self.MARGIN)
+        placeholder = self._match_at(datetime(2026, 7, 4, 15, 0, tzinfo=timezone.utc), home="Sieger SF 12")
+        assert not in_tip_window(placeholder, self.NOW, self.WINDOW, self.MARGIN)

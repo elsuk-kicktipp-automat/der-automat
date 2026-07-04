@@ -105,7 +105,7 @@ GitHub Actions übernimmt den Betrieb (`.github/workflows/`):
 
 | Workflow | Zeitplan | Aufgabe |
 | --- | --- | --- |
-| `spieltag.yml` | täglich 06:00 UTC | predict → seal → evaluate → Commit |
+| `spieltag.yml` | stündlich | predict (Spiele im 4h-Fenster vor Anstoß) → seal → evaluate → Commit → Kicktipp-Abgabe (verifiziert, aus den versiegelten .enc) |
 | `unseal.yml` | alle 30 min | fällige Tipps enthüllen + abrechnen (früher Abbruch ohne fällige Spiele) |
 | `deploy-site.yml` | bei Daten-/Site-Änderungen | Astro-Build → GitHub Pages |
 

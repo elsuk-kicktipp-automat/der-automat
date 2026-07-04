@@ -75,6 +75,18 @@ llm:
     enabled: true
     max_news_age_days: 5 # RSS-Schlagzeilen älter als das zählen nicht mehr
 
+# Tipp-Timing: Spiele werden erst getippt/versiegelt/eingetragen, wenn ihr
+# Anstoß höchstens tip_window_hours entfernt ist - so fließen tagesaktuelle
+# News und Quotenbewegungen (z.B. kurzfristige Ausfälle) noch in den Tipp ein.
+# Untergrenze safety_margin_minutes: so knapp vor (oder nach) Anstoß wird
+# nicht mehr getippt - schützt den Fairness-Mechanismus (Tipp steht nachweislich
+# vor Anstoß fest) und lässt der Kette predict->seal->commit->Kicktipp Luft.
+# Fenstergröße ist an GitHubs Cron-Zuverlässigkeit bemessen (beobachtete
+# Verspätungen bis ~2,5h): stündlicher Lauf + 4h-Fenster = ~4 Versuche pro Spiel.
+timing:
+  tip_window_hours: 4
+  safety_margin_minutes: 20
+
 # Kicktipp-Abgabe (concept.md Phase 4): trägt die Tipps automatisch bei
 # kicktipp.de ein. Zugangsdaten und Rundenname kommen ausschließlich aus
 # GitHub Actions Secrets (KICKTIPP_EMAIL/PASSWORD/RUNDE), nie hier - die

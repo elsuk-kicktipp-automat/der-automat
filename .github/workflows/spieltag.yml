@@ -1,10 +1,18 @@
-# Täglicher Spieltags-Lauf: Prognose für die nächste Runde, Versiegelung
-# (nur Hashes werden öffentlich), Punkteabrechnung der enthüllten Tipps.
+# Stündlicher Spieltags-Lauf: prognostiziert/versiegelt Spiele, deren Anstoß
+# ins Tipp-Fenster fällt (config.yaml: timing), rechnet Enthülltes ab und
+# trägt versiegelte Tipps bei Kicktipp ein.
+#
+# Reihenfolge ist Teil des Fairness-Mechanismus: erst versiegeln und den
+# Hash-Beweis committen/pushen, DANN bei Kicktipp eintragen (aus den
+# verschlüsselten .enc-Dateien). Schlägt die Abgabe fehl, existiert der
+# öffentliche Beweis trotzdem schon - und der rote Lauf löst GitHubs
+# Fehlerbenachrichtigung aus (concept.md §6).
 name: Spieltag
 
 on:
   schedule:
-    - cron: '0 6 * * *' # täglich 06:00 UTC, deutlich vor den WM-Anstoßzeiten
+    - cron: '0 * * * *' # stündlich: Tipp-Fenster (4h) braucht mehrere Versuche,
+                        # GitHub-Crons feuern erfahrungsgemäß bis zu ~2,5h verspätet
   workflow_dispatch:
 
 permissions:
@@ -27,24 +35,11 @@ jobs:
 
       - run: pip install -r requirements.txt
 
-      - name: Prognose (idempotent pro Runde)
+      - name: Prognose (Spiele im Tipp-Fenster)
         run: python -m engine.cli predict
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
-
-      - name: Playwright-Browser installieren
-        run: playwright install --with-deps chromium
-
-      # Läuft VOR dem Versiegeln (das die Klartext-Datei danach löscht).
-      # Dry-Run/Live per config.yaml (kicktipp_submission.dry_run) - Details
-      # zu befüllten Tipps werden bewusst nicht geloggt (öffentliches Repo).
-      - name: Kicktipp-Tippabgabe
-        run: python -m engine.cli kicktipp
-        env:
-          KICKTIPP_EMAIL: ${{ secrets.KICKTIPP_EMAIL }}
-          KICKTIPP_PASSWORD: ${{ secrets.KICKTIPP_PASSWORD }}
-          KICKTIPP_RUNDE: ${{ secrets.KICKTIPP_RUNDE }}
 
       - name: Versiegeln
         run: python -m engine.cli seal
@@ -65,7 +60,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
-            git commit -m "Spieltags-Update $(date -u +%F)"
+            git commit -m "Spieltags-Update $(date -u '+%F %H:%M') UTC"
             git push
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
@@ -77,3 +72,27 @@ jobs:
         run: gh workflow run deploy-site.yml --ref main
         env:
           GH_TOKEN: ${{ github.token }}
+
+      # Kicktipp-Abgabe NACH dem Fairness-Commit; Browser-Arbeit nur, wenn
+      # überhaupt versiegelte Tipps vorliegen (sonst endet der Lauf hier).
+      - name: Prüfen, ob versiegelte Tipps vorliegen
+        id: pending
+        run: |
+          if ls data/sealed/*.enc >/dev/null 2>&1; then
+            echo "pending=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "pending=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Playwright-Browser installieren
+        if: steps.pending.outputs.pending == 'true'
+        run: playwright install --with-deps chromium
+
+      - name: Kicktipp-Tippabgabe (verifiziert, schlägt bei Anomalien fehl)
+        if: steps.pending.outputs.pending == 'true'
+        run: python -m engine.cli kicktipp
+        env:
+          KICKTIPP_EMAIL: ${{ secrets.KICKTIPP_EMAIL }}
+          KICKTIPP_PASSWORD: ${{ secrets.KICKTIPP_PASSWORD }}
+          KICKTIPP_RUNDE: ${{ secrets.KICKTIPP_RUNDE }}
+          SEAL_SECRET: ${{ secrets.SEAL_SECRET }}

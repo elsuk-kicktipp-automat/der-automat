@@ -8,7 +8,7 @@ const results = loadResults();
 const current = matchdays.at(-1);
 const scored = current ? resultsFor(current, results) : undefined;
 
-const COMPETITION_LABELS = { wm2026: 'WM 2026', bl1: 'Bundesliga' };
+const COMPETITION_LABELS = { wm26: 'WM 2026', wm2026: 'WM 2026', bl1: 'Bundesliga' };
 const competitionLabel = current
   ? COMPETITION_LABELS[current.competition] ?? current.competition
   : '';

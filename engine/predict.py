@@ -318,22 +318,50 @@ def predict_matches(
     return predictions
 
 
+def in_tip_window(match: Match, now: datetime, window: timedelta, margin: timedelta) -> bool:
+    """Tippbar ist ein Spiel nur im Fenster (now+margin, now+window]:
+
+    - Obergrenze window: so spät wie möglich tippen, damit tagesaktuelle News
+      und Quotenbewegungen (kurzfristige Ausfälle!) noch in den Tipp einfließen.
+    - Untergrenze margin: nie für bereits laufende oder unmittelbar anstehende
+      Spiele tippen - der Fairness-Beweis ("Tipp stand vor Anstoß fest") wäre
+      sonst wertlos, und Live-Quoten würden den laufenden Spielstand einpreisen.
+    """
+    return (
+        not match.finished
+        and not match.has_placeholder
+        and now + margin < match.kickoff_utc <= now + window
+    )
+
+
 def run_predict(config: dict) -> dict | None:
-    """Prognostiziert die nächste anstehende Runde; None, wenn nichts ansteht."""
+    """Prognostiziert tippbare Spiele im Zeitfenster; None, wenn nichts ansteht.
+
+    Pro Lauf wird höchstens eine Runde bearbeitet (Dateinamen sind rundenbasiert);
+    bereits getippte Paarungen werden VOR der teuren Arbeit (Quoten, LLM)
+    ausgefiltert - der stündliche Leerlauf kostet so weder API-Kontingent noch Zeit.
+    """
     now = datetime.now(timezone.utc)
+    timing = config.get("timing", {})
+    window = timedelta(hours=timing.get("tip_window_hours", 4))
+    margin = timedelta(minutes=timing.get("safety_margin_minutes", 20))
     season = config["season"]
     matches = fetch_competition(config["leagues"], season, force_refresh=True)
 
-    upcoming = [
-        m for m in matches
-        if not m.finished and not m.has_placeholder
-        and m.kickoff_utc > now - timedelta(hours=3)
-    ]
-    if not upcoming:
+    tippable = [m for m in matches if in_tip_window(m, now, window, margin)]
+    if not tippable:
         return None
 
-    next_matchday = min(upcoming, key=lambda m: m.kickoff_utc).matchday
-    targets = [m for m in upcoming if m.matchday == next_matchday]
+    next_matchday = min(tippable, key=lambda m: m.kickoff_utc).matchday
+    stem = f"{config['competition']}_{season}_md{next_matchday:02d}"
+    covered = _covered_pairings(stem)
+    targets = [
+        m for m in tippable
+        if m.matchday == next_matchday and (m.home_name, m.away_name) not in covered
+    ]
+    if not targets:
+        return None
+
     train = [m for m in matches if m.has_result]
     if config["team_type"] == "club":
         lookback = config.get("backtest", {}).get("club", {}).get("lookback_seasons", 2)
@@ -372,7 +400,7 @@ def _covered_pairings(stem: str) -> set[tuple[str, str]]:
 def main(config: dict) -> None:
     report = run_predict(config)
     if report is None:
-        print("Keine anstehenden Spiele gefunden (Saisonpause?), nichts zu tun.")
+        print("Kein ungetipptes Spiel im Tipp-Fenster, nichts zu tun.")
         return
 
     # Pro Paarung wird genau einmal getippt (Fairness-Mechanismus). Neue

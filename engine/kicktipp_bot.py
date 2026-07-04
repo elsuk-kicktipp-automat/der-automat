@@ -9,19 +9,30 @@ zeilenspezifisches Präfix), deshalb per Substring gesucht
 (input[name*="heimTipp"]). Bereits beendete/laufende Spiele haben keine
 Eingabefelder mehr - solche Zeilen werden übersprungen.
 
+Reihenfolge im Betrieb (Fairness): erst versiegeln + committen, DANN hier
+eintragen - die Tipps kommen deshalb aus den verschlüsselten data/sealed/*.enc
+(Schlüssel SEAL_SECRET), nicht aus dem Klartext-Zwischenstand. Schlägt die
+Abgabe fehl, existiert der öffentliche Hash-Beweis trotzdem schon.
+
+Nach dem Speichern wird die Seite neu geladen und jeder gefüllte Tipp gegen
+die tatsächlich gespeicherten Werte verifiziert - ein Klick allein beweist
+nichts (Kicktipp kann Werte still verwerfen). Anomalien (nicht gefundene
+Paarungen, Verifikationsfehler) lassen den Lauf laut fehlschlagen, damit
+GitHubs Fehlerbenachrichtigung greift (concept.md §6: Fallback-Alarm).
+
 Dry-Run (config.yaml: kicktipp_submission.dry_run): füllt alle Felder ganz
 normal aus und macht einen Screenshot, klickt aber NICHT auf "Tipps
-speichern" - Zuordnung und Formularstruktur lassen sich damit gefahrlos
-prüfen, bevor scharf geschaltet wird. Der Screenshot zeigt die noch nicht
-versiegelten Klartext-Tipps und bleibt deshalb lokal (gitignored) - nie als
-GitHub-Actions-Artefakt hochladen, das Repo ist öffentlich.
+speichern". Der Screenshot zeigt unversiegelte Klartext-Tipps und bleibt
+deshalb lokal (gitignored) - nie als GitHub-Actions-Artefakt hochladen, das
+Repo ist öffentlich.
 """
 
 import json
 import os
 from datetime import datetime, timezone
+from pathlib import Path
 
-from .config import PREDICTIONS_DIR, PROJECT_ROOT, load_dotenv
+from .config import PROJECT_ROOT, SEALED_DIR, load_dotenv
 from .teams import normalize
 
 LOGIN_URL = "https://www.kicktipp.de/info/profil/login/"
@@ -69,6 +80,60 @@ def login(page, email: str, password: str) -> None:
         )
 
 
+def load_pending_tips(
+    secret: str,
+    now: datetime | None = None,
+    sealed_dir: Path = SEALED_DIR,
+) -> dict[tuple[str, str], tuple[int, int]]:
+    """Entschlüsselt alle versiegelten Tipps, deren Anstoß noch bevorsteht.
+
+    Quelle ist bewusst data/sealed/ (nicht der Klartext-Zwischenstand):
+    eingetragen wird nur, was schon öffentlich per Hash beweisbar ist.
+    """
+    from .seal import _fernet  # lokaler Import: seal importiert nicht zurück
+
+    now = now or datetime.now(timezone.utc)
+    tips = {}
+    for enc_path in sorted(sealed_dir.glob("*.enc")):
+        data = json.loads(_fernet(secret).decrypt(enc_path.read_bytes()).decode("utf-8"))
+        for m in data["matches"]:
+            kickoff = datetime.strptime(m["kickoff_utc"], "%Y-%m-%dT%H:%M:%SZ").replace(
+                tzinfo=timezone.utc
+            )
+            if kickoff > now:
+                tips[(normalize(m["home"]), normalize(m["away"]))] = tuple(m["tip"])
+    return tips
+
+
+def _read_saved_values(page) -> dict[tuple[str, str], tuple[str, str]]:
+    """Liest die aktuell gespeicherten Tipp-Werte von der Tippabgabe-Seite."""
+    saved = {}
+    for row in page.locator("#tippabgabeSpiele tbody tr.datarow").all():
+        home_el = row.locator(".col1").first
+        away_el = row.locator(".col2").first
+        if home_el.count() == 0 or away_el.count() == 0:
+            continue
+        home_input = row.locator('input[name*="heimTipp"]')
+        away_input = row.locator('input[name*="gastTipp"]')
+        if home_input.count() == 0 or away_input.count() == 0:
+            continue
+        pairing = (normalize(home_el.inner_text()), normalize(away_el.inner_text()))
+        saved[pairing] = (home_input.input_value(), away_input.input_value())
+    return saved
+
+
+def verification_mismatches(
+    filled: dict[tuple[str, str], tuple[int, int]],
+    saved: dict[tuple[str, str], tuple[str, str]],
+) -> list[tuple[str, str]]:
+    """Paarungen, deren gespeicherte Werte nicht dem abgeschickten Tipp entsprechen."""
+    return [
+        pairing
+        for pairing, (tip_h, tip_a) in filled.items()
+        if saved.get(pairing) != (str(tip_h), str(tip_a))
+    ]
+
+
 def submit_tips(
     email: str,
     password: str,
@@ -78,13 +143,13 @@ def submit_tips(
     headless: bool = True,
     overwrite: bool = False,
 ) -> dict:
-    """Trägt Tipps bei Kicktipp ein.
+    """Trägt Tipps bei Kicktipp ein und verifiziert das Ergebnis serverseitig.
 
     predictions: {(normalisierter Heim-Key, normalisierter Auswärts-Key): (heim, gast)}.
-    Gibt ein Log-Dict zurück (gefüllte/übersprungene Paarungen, Screenshot-Pfad).
-    Enthält absichtlich keine Tipp-Werte in print()-Ausgaben - dieser Code
-    läuft auch in GitHub Actions, dessen Logs bei einem öffentlichen Repo für
-    jeden einsehbar sind.
+    Gibt ein Log-Dict zurück (gefüllte/übersprungene Paarungen, Screenshot-Pfad,
+    Verifikationsergebnis). Enthält absichtlich keine Tipp-Werte in
+    print()-Ausgaben - dieser Code läuft auch in GitHub Actions, dessen Logs
+    bei einem öffentlichen Repo für jeden einsehbar sind.
     """
     from playwright.sync_api import sync_playwright  # lazy: nur nötig, wenn wirklich aufgerufen
 
@@ -95,6 +160,7 @@ def submit_tips(
         "unmatched": [],
         "screenshot": None,
         "submitted": False,
+        "mismatches": [],
     }
 
     with sync_playwright() as p:
@@ -116,6 +182,7 @@ def submit_tips(
         _accept_consent(page)
 
         remaining = dict(predictions)
+        filled_values: dict[tuple[str, str], tuple[int, int]] = {}
         for row in page.locator("#tippabgabeSpiele tbody tr.datarow").all():
             home_el = row.locator(".col1").first
             away_el = row.locator(".col2").first
@@ -140,6 +207,7 @@ def submit_tips(
             tip_h, tip_a = remaining.pop(pairing)
             home_input.fill(str(tip_h))
             away_input.fill(str(tip_a))
+            filled_values[pairing] = (tip_h, tip_a)
             log["filled"].append(pairing)
 
         log["unmatched"] = list(remaining.keys())
@@ -155,13 +223,18 @@ def submit_tips(
             # Best-effort: manche Seiten werden wegen Hintergrund-Verbindungen
             # (Tracking/Ads) nie vollständig "idle" - das POST ist mit dem
             # Klick bereits abgeschickt, ein Timeout hier heißt nicht, dass
-            # das Speichern fehlgeschlagen ist (im Test verifiziert: Werte
-            # waren serverseitig gespeichert, obwohl networkidle nie kam).
+            # das Speichern fehlgeschlagen ist.
             try:
                 page.wait_for_load_state("networkidle", timeout=10000)
             except Exception:
                 pass
             log["submitted"] = True
+
+            # Serverseitige Verifikation: Seite neu laden, gespeicherte Werte
+            # gegen die abgeschickten Tipps prüfen - der Klick allein beweist
+            # nichts (Validierungsfehler, still verworfene Felder).
+            page.goto(tippabgabe_url)
+            log["mismatches"] = verification_mismatches(filled_values, _read_saved_values(page))
 
         context.close()
         browser.close()
@@ -174,6 +247,7 @@ def main(config: dict) -> None:
     email = os.environ.get("KICKTIPP_EMAIL")
     password = os.environ.get("KICKTIPP_PASSWORD")
     runde = os.environ.get("KICKTIPP_RUNDE")
+    secret = os.environ.get("SEAL_SECRET")
     cfg = config.get("kicktipp_submission", {})
 
     if not cfg.get("enabled"):
@@ -181,15 +255,12 @@ def main(config: dict) -> None:
         return
     if not (email and password and runde):
         raise SystemExit("KICKTIPP_EMAIL/PASSWORD/RUNDE fehlen (Secrets bzw. lokale .env).")
+    if not secret:
+        raise SystemExit("SEAL_SECRET fehlt (nötig zum Entschlüsseln der versiegelten Tipps).")
 
-    predictions = {}
-    for f in sorted(PREDICTIONS_DIR.glob("*.json")):
-        data = json.loads(f.read_text(encoding="utf-8"))
-        for m in data["matches"]:
-            predictions[(normalize(m["home"]), normalize(m["away"]))] = tuple(m["tip"])
-
+    predictions = load_pending_tips(secret)
     if not predictions:
-        print("Keine offenen Tipps zum Eintragen gefunden.")
+        print("Keine versiegelten Tipps mit bevorstehendem Anstoß, nichts einzutragen.")
         return
 
     dry_run = cfg.get("dry_run", True)
@@ -200,9 +271,22 @@ def main(config: dict) -> None:
         f"{len(log['skipped_already_tipped'])} bereits vorhandene übersprungen, "
         f"{len(log['skipped_no_input'])} noch nicht tippbar/schon beendet."
     )
-    if log["unmatched"]:
-        print(f"{len(log['unmatched'])} Paarungen nicht auf der Kicktipp-Seite gefunden (Team-Namen prüfen).")
     if dry_run:
         print("Dry-Run: NICHT abgeschickt. Screenshot liegt lokal (nicht committen/hochladen).")
     elif log["submitted"]:
-        print("Tipps live bei Kicktipp eingetragen.")
+        print("Tipps abgeschickt und serverseitig verifiziert." if not log["mismatches"]
+              else "Tipps abgeschickt, aber Verifikation fand Abweichungen!")
+
+    # Anomalien lassen den Lauf laut fehlschlagen -> GitHub-Fehlermail
+    # (concept.md §6: Benachrichtigung, damit ein Mensch manuell eintragen kann).
+    problems = []
+    if log["unmatched"]:
+        problems.append(
+            f"{len(log['unmatched'])} Paarung(en) nicht auf der Kicktipp-Seite gefunden"
+        )
+    if log["mismatches"]:
+        problems.append(
+            f"{len(log['mismatches'])} Tipp(s) nach dem Speichern nicht korrekt hinterlegt"
+        )
+    if problems:
+        raise SystemExit("Kicktipp-Abgabe unvollständig: " + "; ".join(problems))
