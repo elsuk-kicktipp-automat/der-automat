@@ -5,13 +5,13 @@
   "stage": "Achtelfinale",
   "model_version": "dixon-coles-elo-3-market-llm-news",
   "points_total": 4,
-  "matches_scored": 2,
-  "matches_open": 6,
+  "matches_scored": 3,
+  "matches_open": 5,
   "hits": {
     "exact": 0,
     "goal_diff": 0,
     "tendency": 2,
-    "miss": 0
+    "miss": 1
   },
   "shadow_points": {
     "most_probable": 2,
@@ -20,20 +20,20 @@
     "llm_adjusted": 0
   },
   "shadow_matches": {
-    "most_probable": 2,
-    "elo_favorite": 2,
-    "always_draw": 2,
+    "most_probable": 3,
+    "elo_favorite": 3,
+    "always_draw": 3,
     "llm_adjusted": 0
   },
-  "brier_avg": 0.2233,
+  "brier_avg": 0.4725,
   "advance_points_total": 4,
-  "advance_scored": 2,
+  "advance_scored": 3,
   "paper_betting": {
-    "stake_total_eur": 20.0,
+    "stake_total_eur": 30.0,
     "payout_total_eur": 29.6,
-    "profit_total_eur": 9.6,
-    "roi": 0.48,
-    "bets_scored": 2,
+    "profit_total_eur": -0.4,
+    "roi": -0.0133,
+    "bets_scored": 3,
     "bets_won": 2
   },
   "matches": [
@@ -157,7 +157,59 @@
       "home": "Brasilien",
       "away": "Norwegen",
       "kickoff_utc": "2026-07-05T20:00:00Z",
-      "status": "revealed"
+      "status": "revealed",
+      "tip": [
+        2,
+        1
+      ],
+      "result": [
+        1,
+        2
+      ],
+      "points": 0,
+      "shadow_points": {
+        "most_probable": 0,
+        "elo_favorite": 0,
+        "always_draw": 0
+      },
+      "brier": 0.971,
+      "advance": {
+        "tip_side": "home",
+        "actual_side": "away",
+        "correct": false,
+        "points": 0
+      },
+      "paper_bet": {
+        "mode": "paper",
+        "market": "h2h_90min",
+        "selection": "home",
+        "selection_label": "Brasilien gewinnt",
+        "status": "recommended",
+        "source": "tipico_de",
+        "source_label": "Tipico",
+        "bookmaker_count": 25,
+        "odds_decimal": 1.77,
+        "model_probability": 0.524,
+        "implied_probability": 0.565,
+        "edge": -0.0725,
+        "expected_value_eur": -0.72,
+        "stake_eur": 10.0,
+        "max_stake_eur": 100.0,
+        "kelly_fraction": 0.0,
+        "applied_kelly_fraction": 0.25,
+        "bankroll_eur": 1000.0,
+        "backfilled": true,
+        "backfilled_at_utc": "2026-07-04T11:28:14Z",
+        "probability_basis": "stored_probabilities",
+        "test_backfill": true,
+        "test_backfill_reason": "Explizite Test-Nachwette fuer bereits versiegelte Achtelfinal-Spiele."
+      },
+      "paper_bet_result": {
+        "outcome": "lost",
+        "stake_eur": 10.0,
+        "payout_eur": 0.0,
+        "profit_eur": -10.0
+      }
     },
     {
       "home": "Mexiko",
