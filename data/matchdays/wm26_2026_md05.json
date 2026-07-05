@@ -176,9 +176,81 @@
       "home": "Brasilien",
       "away": "Norwegen",
       "kickoff_utc": "2026-07-05T20:00:00Z",
-      "status": "sealed",
+      "status": "revealed",
       "hash": "46d27c2c617a45bd56d032d9243968b8e2d73706c331d040c97377623fa9e9b9",
-      "paper_bet_status": "sealed"
+      "paper_bet_status": "sealed",
+      "tip": [
+        2,
+        1
+      ],
+      "advance_tip": null,
+      "expected_points": 1.339,
+      "factors": {
+        "expected_goals": [
+          2.06,
+          1.31
+        ],
+        "probabilities": {
+          "home": 0.524,
+          "draw": 0.266,
+          "away": 0.209
+        },
+        "elo": {
+          "home": 2031.0,
+          "away": 1934.0,
+          "beta": 0.205
+        },
+        "market": {
+          "home": 0.524,
+          "draw": 0.257,
+          "away": 0.219,
+          "weight": 0.7
+        },
+        "home_advantage": 0.0,
+        "trained_on_matches": 88,
+        "llm_adjustment": null
+      },
+      "begruendung": "Der Tipp 2:1 für das Spiel Brasilien gegen Norwegen maximiert den Punkte-Erwartungswert im Kicktipp-Schema. Dieser Tipp basiert auf den berechneten Wahrscheinlichkeiten und den erwarteten Toren, wobei Brasilien als Favorit gilt. Der Tipp 2:1 ist nicht unbedingt das wahrscheinlichste Einzelergebnis, aber er bietet die beste Balance zwischen Wahrscheinlichkeit und Punktegewinn, da er sowohl einen Sieg Brasiliens als auch eine moderate Anzahl an Toren berücksichtigt. Durch diese Strategie wird der Punkte-Erwartungswert maximiert, indem das Risiko und der mögliche Gewinn optimal abgewogen werden.",
+      "shadow_tips": {
+        "most_probable": [
+          1,
+          1
+        ],
+        "elo_favorite": [
+          2,
+          1
+        ],
+        "always_draw": [
+          1,
+          1
+        ]
+      },
+      "paper_bet": {
+        "mode": "paper",
+        "market": "h2h_90min",
+        "selection": "home",
+        "selection_label": "Brasilien gewinnt",
+        "status": "recommended",
+        "source": "tipico_de",
+        "source_label": "Tipico",
+        "bookmaker_count": 25,
+        "odds_decimal": 1.77,
+        "model_probability": 0.524,
+        "implied_probability": 0.565,
+        "edge": -0.0725,
+        "expected_value_eur": -0.72,
+        "stake_eur": 10.0,
+        "max_stake_eur": 100.0,
+        "kelly_fraction": 0.0,
+        "applied_kelly_fraction": 0.25,
+        "bankroll_eur": 1000.0,
+        "backfilled": true,
+        "backfilled_at_utc": "2026-07-04T11:28:14Z",
+        "probability_basis": "stored_probabilities",
+        "test_backfill": true,
+        "test_backfill_reason": "Explizite Test-Nachwette fuer bereits versiegelte Achtelfinal-Spiele."
+      },
+      "salt": "9f838537ffd903a861de6472c4a80a9f"
     },
     {
       "home": "Mexiko",
