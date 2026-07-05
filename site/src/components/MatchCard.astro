@@ -1,5 +1,6 @@
 ---
 import { formatKickoff } from '../lib/data.mjs';
+import SchwitzIndex from './SchwitzIndex.astro';
 
 // match: Eintrag aus data/matchdays/*.json, scored: passender Eintrag aus data/results/
 const { match, scored, delay = 0 } = Astro.props;
@@ -79,6 +80,8 @@ const possibleLoss = stake > 0 ? -stake : null;
           </div>
         </div>
       )}
+
+      {probs && <SchwitzIndex probs={probs} />}
 
       {match.begruendung && <p class="analysis">{match.begruendung}</p>}
       {match.begruendung_source === 'llm' && (
