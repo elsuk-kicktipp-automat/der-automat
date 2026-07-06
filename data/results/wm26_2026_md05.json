@@ -4,37 +4,37 @@
   "matchday": 5,
   "stage": "Achtelfinale",
   "model_version": "dixon-coles-elo-3-market-llm-news",
-  "points_total": 7,
-  "matches_scored": 4,
-  "matches_open": 4,
+  "points_total": 10,
+  "matches_scored": 5,
+  "matches_open": 3,
   "hits": {
     "exact": 0,
-    "goal_diff": 1,
+    "goal_diff": 2,
     "tendency": 2,
     "miss": 1
   },
   "shadow_points": {
     "most_probable": 2,
-    "elo_favorite": 8,
+    "elo_favorite": 11,
     "always_draw": 0,
     "llm_adjusted": 0
   },
   "shadow_matches": {
-    "most_probable": 4,
-    "elo_favorite": 4,
-    "always_draw": 4,
+    "most_probable": 5,
+    "elo_favorite": 5,
+    "always_draw": 5,
     "llm_adjusted": 0
   },
-  "brier_avg": 0.5,
-  "advance_points_total": 6,
-  "advance_scored": 4,
+  "brier_avg": 0.4795,
+  "advance_points_total": 8,
+  "advance_scored": 5,
   "paper_betting": {
-    "stake_total_eur": 40.0,
-    "payout_total_eur": 53.1,
-    "profit_total_eur": 13.1,
-    "roi": 0.3275,
-    "bets_scored": 4,
-    "bets_won": 3
+    "stake_total_eur": 50.0,
+    "payout_total_eur": 71.8,
+    "profit_total_eur": 21.8,
+    "roi": 0.436,
+    "bets_scored": 5,
+    "bets_won": 4
   },
   "matches": [
     {
@@ -273,7 +273,59 @@
       "home": "Portugal",
       "away": "Spanien",
       "kickoff_utc": "2026-07-06T19:00:00Z",
-      "status": "revealed"
+      "status": "revealed",
+      "tip": [
+        1,
+        2
+      ],
+      "result": [
+        0,
+        1
+      ],
+      "points": 3,
+      "shadow_points": {
+        "most_probable": 0,
+        "elo_favorite": 3,
+        "always_draw": 0
+      },
+      "brier": 0.3976,
+      "advance": {
+        "tip_side": "away",
+        "actual_side": "away",
+        "correct": true,
+        "points": 2
+      },
+      "paper_bet": {
+        "mode": "paper",
+        "market": "h2h_90min",
+        "selection": "away",
+        "selection_label": "Spanien gewinnt",
+        "status": "recommended",
+        "source": "tipico_de",
+        "source_label": "Tipico",
+        "bookmaker_count": 25,
+        "odds_decimal": 1.87,
+        "model_probability": 0.487,
+        "implied_probability": 0.5348,
+        "edge": -0.0893,
+        "expected_value_eur": -0.89,
+        "stake_eur": 10.0,
+        "max_stake_eur": 100.0,
+        "kelly_fraction": 0.0,
+        "applied_kelly_fraction": 0.25,
+        "bankroll_eur": 1000.0,
+        "backfilled": true,
+        "backfilled_at_utc": "2026-07-04T11:28:14Z",
+        "probability_basis": "stored_probabilities",
+        "test_backfill": true,
+        "test_backfill_reason": "Explizite Test-Nachwette fuer bereits versiegelte Achtelfinal-Spiele."
+      },
+      "paper_bet_result": {
+        "outcome": "won",
+        "stake_eur": 10.0,
+        "payout_eur": 18.7,
+        "profit_eur": 8.7
+      }
     },
     {
       "home": "USA",
