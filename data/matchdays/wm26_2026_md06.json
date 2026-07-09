@@ -16,9 +16,148 @@
       "home": "Frankreich",
       "away": "Marokko",
       "kickoff_utc": "2026-07-09T20:00:00Z",
-      "status": "sealed",
+      "status": "revealed",
       "hash": "bcb8b90521da746e45d25aec549e791fe8a08fbab88150e6d90cb1e354e2a698",
-      "paper_bet_status": "sealed"
+      "paper_bet_status": "sealed",
+      "tip": [
+        2,
+        1
+      ],
+      "advance_tip": null,
+      "expected_points": 1.511,
+      "factors": {
+        "expected_goals": [
+          2.01,
+          0.96
+        ],
+        "probabilities": {
+          "home": 0.597,
+          "draw": 0.255,
+          "away": 0.148
+        },
+        "raw_probabilities": {
+          "home": 0.585,
+          "draw": 0.263,
+          "away": 0.152
+        },
+        "elo": {
+          "home": 2143.0,
+          "away": 1921.0,
+          "beta": 0.1842
+        },
+        "market": {
+          "home": 0.602,
+          "draw": 0.252,
+          "away": 0.146,
+          "weight": 0.7
+        },
+        "home_advantage": 0.0,
+        "trained_on_matches": 96,
+        "news_checked": 5,
+        "news_sources": {
+          "snippets": [
+            {
+              "title": "WM-News: Frankreich verschärft Sicherheitsmaßnahmen vor Viertelfinale",
+              "description": "Vor dem Viertelfinal-Duell zwischen mit Marokko werden in Frankreich die Sicherheitsmaßnahmen verschärft. Norwegen wechselt in Miami kurzfristig das Hotel. Alle News, kuriose Geschichten und Eindrücke von vor Ort rund um die WM 2026 im Liveblog.",
+              "published": "2026-07-09T19:35:18+02:00",
+              "source": "sportschau",
+              "source_label": "Sportschau"
+            },
+            {
+              "title": "WM-News: Frankreich verschärft Sicherheitsmaßnahmen vor Viertelfinale",
+              "description": "Vor dem Viertelfinal-Duell zwischen mit Marokko werden in Frankreich die Sicherheitsmaßnahmen verschärft. Norwegen wechselt in Miami kurzfristig das Hotel. Alle News, kuriose Geschichten und Eindrücke von vor Ort rund um die WM 2026 im Liveblog.",
+              "published": "2026-07-09T19:35:18+02:00",
+              "source": "sportschau",
+              "source_label": "Sportschau"
+            },
+            {
+              "title": "Achtung, Marokko!: Frankreichs Superstars zaubern im Training",
+              "description": "WM News Show, clipout, Nationalmannschaft Frankreich, top-video-sport, Fussball WM, Kylian Mbappé",
+              "published": "2026-07-09T15:54:30+02:00",
+              "source": "bild",
+              "source_label": "BILD",
+              "url": "https://www.bild.de/sport/fussball/achtung-marokko-frankreichs-superstars-zaubern-im-training-6a4f4fc6a6db83ce8f123a99"
+            },
+            {
+              "title": "WM 2026: Journalisten zoffen sich auf Marokko-Pressekonferenz",
+              "description": "Fussball WM 2026, Nationalmannschaft Marokko, Nationalmannschaft Frankreich, Pressekonferenz, no-sport-app",
+              "published": "2026-07-09T14:48:28+02:00",
+              "source": "bild",
+              "source_label": "BILD",
+              "url": "https://www.bild.de/sport/fussball/wm-2026-journalisten-zoffen-sich-auf-marokko-pressekonferenz-6a4f6d15a6db83ce8f123e4d"
+            },
+            {
+              "title": "WM 2026: Matthäus tippt alle Viertelfinal-Kracher!",
+              "description": "Deutsche Nationalmannschaft, Fussball WM 2026, Fußball, Matthäus Lothar, Nationalmannschaft Frankreich, Aufmacher-Bereich, super-a-teaser",
+              "published": "2026-07-09T14:43:28+02:00",
+              "source": "bild",
+              "source_label": "BILD",
+              "url": "https://www.bild.de/sport/fussball/wm-2026-matthaeus-tippt-alle-viertelfinal-kracher-6a4f6105a6db83ce8f123d03"
+            }
+          ],
+          "checked": 3,
+          "sources": [
+            {
+              "source": "kicker",
+              "label": "Kicker",
+              "checked": true,
+              "matches": 0
+            },
+            {
+              "source": "sportschau",
+              "label": "Sportschau",
+              "checked": true,
+              "matches": 11
+            },
+            {
+              "source": "bild",
+              "label": "BILD",
+              "checked": true,
+              "matches": 14
+            }
+          ],
+          "total_matches": 25,
+          "returned": 5,
+          "has_news": true
+        },
+        "llm_adjustment": null
+      },
+      "begruendung": "Frankreich ist hier der klare Favorit, wenn man sich die Zahlen ansieht - ein erwartetes Torverhältnis von 2:1 spricht Bände. Mein Tipp für das Viertelfinale lautet auch entsprechend: 2:1 für die Franzosen. Marokko hat es sicherlich nicht leicht, gegen ein Team anzutreten, das auf einem so hohen Niveau spielt, aber es könnte durchaus eine enge Kiste werden. Die Buchmacher sehen Frankreich auch als starken Favoriten, und wenn man die ELO-Bewertungen betrachtet, liegt Frankreich mit 2143 Punkten deutlich vor Marokko, das auf 1921 Punkte kommt. Es wird ein interessantes Duell, aber letztendlich sollte die Überlegenheit der Franzosen durchschlagen.",
+      "shadow_tips": {
+        "most_probable": [
+          1,
+          1
+        ],
+        "elo_favorite": [
+          2,
+          1
+        ],
+        "always_draw": [
+          1,
+          1
+        ]
+      },
+      "paper_bet": {
+        "mode": "paper",
+        "market": "h2h_90min",
+        "selection": "home",
+        "selection_label": "Frankreich gewinnt",
+        "status": "skipped_no_value",
+        "source": "tipico_de",
+        "source_label": "Tipico",
+        "bookmaker_count": 25,
+        "odds_decimal": 1.57,
+        "model_probability": 0.585,
+        "implied_probability": 0.6369,
+        "edge": -0.0816,
+        "expected_value_eur": -0.0,
+        "stake_eur": 0.0,
+        "max_stake_eur": 100.0,
+        "kelly_fraction": 0.0,
+        "applied_kelly_fraction": 0.25,
+        "bankroll_eur": 1000.0
+      },
+      "salt": "fe5e13a63d6586eeda4167ebf2c31610"
     }
   ]
 }
