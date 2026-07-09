@@ -172,7 +172,12 @@ def fetch_report(
         all_relevant += relevant
 
     all_relevant.sort(key=lambda i: i["published"] or cutoff, reverse=True)
-    snippets = all_relevant[:max_items]
+    # published als ISO-String: der Report landet 1:1 im Prognose-JSON
+    # (factors.news_sources), rohe datetime-Objekte sind nicht serialisierbar
+    snippets = [
+        {**item, "published": item["published"].isoformat() if item["published"] else None}
+        for item in all_relevant[:max_items]
+    ]
     return {
         "snippets": snippets,
         "checked": sum(1 for s in sources if s["checked"]),

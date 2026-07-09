@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timezone
 
 import pytest
@@ -123,6 +124,17 @@ class TestFetchSnippets:
         now = datetime(2026, 7, 3, 12, tzinfo=timezone.utc)
         result = fetch_snippets("Deutschland", "Portugal", cache_dir=tmp_path, cache_tag="2026-07-03", now=now)
         assert any("Elfmeterschießen" in item["title"] for item in result)
+
+    def test_report_with_news_is_json_serializable(self, cache_with_feed):
+        # Regression: der Report landet 1:1 im Prognose-JSON (predict.py) -
+        # rohe datetime-Objekte in den Snippets ließen json.dumps abstürzen.
+        now = datetime(2026, 7, 3, 12, tzinfo=timezone.utc)
+        report = fetch_report("Deutschland", "Portugal", cache_dir=cache_with_feed, cache_tag="2026-07-03", now=now)
+        assert report["has_news"] is True
+        json.dumps(report)
+        assert all(
+            s["published"] is None or isinstance(s["published"], str) for s in report["snippets"]
+        )
 
     def test_report_lists_sources_and_news_state(self, cache_with_feed):
         now = datetime(2026, 7, 3, 12, tzinfo=timezone.utc)

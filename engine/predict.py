@@ -346,6 +346,7 @@ def predict_matches(
                 "home": m.home_name,
                 "away": m.away_name,
                 "stage": m.stage_name,
+                "neutral_venue": neutral_venue,
                 "probabilities": probs,
                 "expected_goals": (lam, mu),
                 "tip": tip,

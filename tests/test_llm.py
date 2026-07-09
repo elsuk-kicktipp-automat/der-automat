@@ -64,8 +64,19 @@ class TestBuildPrompt:
 
     def test_asks_for_short_plain_language_text(self):
         prompt = build_prompt(MATCH_CONTEXT)
-        assert "3-4 kurze Sätze" in prompt
+        assert "3-4 Sätze" in prompt
         assert "Vermeide Fachwörter" in prompt
+        assert "Erfinde nichts" in prompt
+
+    def test_neutral_venue_replaces_home_away_roles(self):
+        prompt = build_prompt({**MATCH_CONTEXT, "neutral_venue": True})
+        assert "neutraler Platz" in prompt
+        assert "(Heim)" not in prompt
+
+    def test_default_keeps_home_away_roles(self):
+        prompt = build_prompt(MATCH_CONTEXT)
+        assert "(Heim)" in prompt
+        assert "neutraler Platz" not in prompt
 
 
 class TestCallGroq:

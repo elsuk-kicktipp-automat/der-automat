@@ -35,8 +35,15 @@ def build_prompt(match_context: dict) -> str:
     probs = match_context["probabilities"]
     lam, mu = match_context["expected_goals"]
     tip = match_context["tip"]
+    # Bei Turnieren auf neutralem Platz (WM) keine Heim/Auswärts-Rollen nennen,
+    # sonst fabuliert das LLM einen Heimvorteil herbei
+    pairing = (
+        f"{home} gegen {away} (neutraler Platz, kein Heimvorteil)"
+        if match_context.get("neutral_venue")
+        else f"{home} (Heim) gegen {away} (Auswärts)"
+    )
     lines = [
-        f"Fußballspiel: {home} (Heim) gegen {away} (Auswärts), {match_context['stage']}.",
+        f"Fußballspiel: {pairing}, {match_context['stage']}.",
         "Statistisches Modell (Dixon-Coles-Poisson, trainiert auf "
         f"{match_context.get('trained_on_matches', '?')} Spielen):",
         f"- Heimsieg {probs['home']:.0%}, Remis {probs['draw']:.0%}, Auswärtssieg {probs['away']:.0%}",
@@ -75,11 +82,19 @@ def build_prompt(match_context: dict) -> str:
         )
     lines.append(f"- Für Kicktipp ausgewählter Tipp: {tip[0]}:{tip[1]}")
     lines.append(
-        "Schreibe 3-4 kurze Sätze auf Deutsch, so dass ein normaler Kicktipp-Mitspieler "
-        "es sofort versteht. Vermeide Fachwörter wie Erwartungswert, Matrix, Prior oder "
-        "Dixon-Coles. Beginne mit dem Tipp und erkläre dann einfach: Wer wirkt stärker, "
-        "was sagen Quoten/ELO/News grob, und warum dieser Tipp für Kicktipp sinnvoll ist. "
-        "Keine Anrede, keine Überschrift, nur Fließtext."
+        "Schreibe 3-4 Sätze auf Deutsch im Ton eines pointierten Fußball-Kommentators "
+        "am Stammtisch: meinungsstark, anschaulich, gern mit einem Augenzwinkern - aber "
+        "ohne Floskeln wie 'Es bleibt spannend' oder 'Fußball ist unberechenbar'. "
+        "Nenne den Tipp früh. Zähle NICHT alle Zahlen von oben auf: Zitiere höchstens "
+        "ein, zwei der aussagekräftigsten und übersetze den Rest in Fußballsprache "
+        "(klarer Favorit, enge Kiste, Duell auf Augenhöhe, Torfestival, Abnutzungskampf). "
+        "Sprich über die Teams und das Spiel, nicht über 'das Modell', 'die Statistik' "
+        "oder 'die Berechnung'. Erfinde nichts dazu: keine Spielernamen, Verletzungen, "
+        "Ergebnisse, Bilanzen, Formkurven oder Anekdoten, die oben nicht stehen. "
+        "Ordne das Kräfteverhältnis ehrlich anhand der Zahlen ein und bleib dabei "
+        "in einer Linie: einen klaren Favoriten nicht kleinreden, ein enges Duell "
+        "nicht zum Selbstläufer erklären. Vermeide Fachwörter wie Erwartungswert, "
+        "Matrix, Prior oder Dixon-Coles. Keine Anrede, keine Überschrift, nur Fließtext."
     )
     return "\n".join(lines)
 
@@ -115,7 +130,9 @@ def generate_begruendung(
     Aufrufer auf die Template-Begründung zurückfallen soll."""
     if not api_key:
         return None, "template"
-    text = call_groq(build_prompt(match_context), api_key, model, max_tokens=450)
+    # Höhere Temperature als beim Anpassungs-Prompt: hier zählt lebendige,
+    # abwechslungsreiche Sprache, die Fakten stehen ohnehin im Dossier
+    text = call_groq(build_prompt(match_context), api_key, model, temperature=0.8, max_tokens=450)
     return (text, "llm") if text else (None, "template")
 
 
