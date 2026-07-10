@@ -130,18 +130,40 @@ print(hashlib.sha256(payload.encode()).hexdigest())"</pre>
     besser sein als der Buchmacher.
   </p>
   <p>
-    So funktioniert es: Eine Buchmacherquote von z.B. 2,50 auf einen Sieg bedeutet,
-    dass der Buchmacher der Mannschaft grob eine Gewinnchance von 40&nbsp;% gibt
-    (1&nbsp;÷&nbsp;2,50). Hält mein Modell dieselbe Mannschaft aber für 48&nbsp;%
-    wahrscheinlich, ist die Quote aus Modellsicht „zu hoch" – eine sogenannte
-    <strong>Value-Wette</strong>: Auf lange Sicht würde sich der Einsatz lohnen,
-    wenn das Modell recht hat. Nur bei so einem rechnerischen Vorteil (mindestens
-    2&nbsp;% „Edge") wird eine Papier-Wette notiert; wie viel fiktives Geld gesetzt
-    wird, bestimmt eine vorsichtige Einsatzformel (Bruchteil-Kelly: je größer
-    Vorteil und Quote, desto mehr – gedeckelt bei 100&nbsp;€ pro Wette). Wichtig
-    dabei: Als Modellmeinung zählt die <em>rohe</em> Wahrscheinlichkeit, bevor die
-    Buchmacherquote in die Prognose eingerechnet wurde – sonst würde die Quote
-    gegen sich selbst verglichen.
+    So funktioniert die Entscheidung: Eine Buchmacherquote ist nichts anderes als
+    eine <strong>versteckte Wahrscheinlichkeits-Einschätzung</strong>. Quote 2,50
+    auf einen Sieg heißt: Der Buchmacher gibt der Mannschaft grob eine Gewinnchance
+    von 40&nbsp;% (1&nbsp;÷&nbsp;2,50). Quote 1,57 heißt rund 64&nbsp;%. Damit
+    liegen zu jedem Spiel zwei Meinungen auf dem Tisch – die des Buchmachers und
+    meine. Die Wett-Regel ist dann ganz einfach:
+  </p>
+  <p>
+    <strong>Gewettet wird nur, wenn meine eigene Einschätzung höher ist als die
+    des Buchmachers.</strong> Sonst nicht – egal, wie klar der Favorit ist.
+  </p>
+  <p>
+    Ein echtes Beispiel aus dem Viertelfinale: Frankreich gegen Marokko, Quote 1,57
+    auf Frankreich – der Buchmacher sagte also „rund 64&nbsp;%". Mein Modell kam
+    nur auf 58,5&nbsp;%. Frankreich war auch aus meiner Sicht der klare Favorit,
+    aber der Buchmacher schätzte ihn noch stärker ein als ich – also habe ich
+    <em>nicht</em> gewettet. Wer wettet, obwohl er die Chance niedriger einschätzt,
+    als die Quote sie bezahlt, zahlt systematisch zu viel: Er verliert nicht
+    unbedingt an diesem einen Abend, aber ziemlich sicher über viele Abende. Dazu
+    kommt, dass in jeder Quote die <strong>Buchmacher-Marge</strong> steckt (rund
+    5&nbsp;%) – auch die muss die eigene Einschätzung erst überbieten, bevor sich
+    eine Wette lohnt.
+  </p>
+  <p>
+    Der rechnerische Vorsprung hat einen Fachbegriff: <strong>„Edge"</strong> –
+    eigene Wahrscheinlichkeit mal Quote, minus 1. Bei 48&nbsp;% Modellmeinung und
+    Quote 2,50 sind das +20&nbsp;% (0,48&nbsp;×&nbsp;2,50&nbsp;=&nbsp;1,20); bei
+    Frankreich–Marokko waren es −8&nbsp;% (0,585&nbsp;×&nbsp;1,57&nbsp;=&nbsp;0,92).
+    Erst ab +2&nbsp;% Edge wird eine Papier-Wette notiert; wie viel fiktives Geld
+    gesetzt wird, bestimmt eine vorsichtige Einsatzformel (Bruchteil-Kelly: je
+    größer Vorsprung und Quote, desto mehr – gedeckelt bei 100&nbsp;€ pro Wette).
+    Wichtig dabei: Als Modellmeinung zählt die <em>rohe</em> Wahrscheinlichkeit,
+    bevor die Buchmacherquote in die Prognose eingerechnet wurde – sonst würde die
+    Quote gegen sich selbst verglichen.
   </p>
   <p>
     Zwei Feinheiten: Erstens gelten 1X2-Wetten beim Buchmacher immer für die
@@ -152,6 +174,30 @@ print(hashlib.sha256(payload.encode()).hexdigest())"</pre>
     gewertet wird). Zweitens werden die Papier-Wetten wie die Tipps
     <strong>mitversiegelt</strong> und erst nach Anstoß enthüllt. Die Bilanz
     (Einsatz, Gewinn/Verlust, ROI) steht auf der Bilanz-Seite.
+  </p>
+
+  <h3>Die Kombiwette</h3>
+  <p>
+    Zusätzlich führe ich höchstens eine <strong>Kombiwette</strong> gleichzeitig:
+    2–3 Tipps aus verschiedenen Spielen, deren Quoten sich multiplizieren –
+    ausgezahlt wird nur, wenn <em>alle</em> Beine gewinnen. Buchmacher bewerben
+    Kombis so aggressiv, weil sich mit den Quoten auch ihre Marge multipliziert:
+    Aus rund 5&nbsp;% pro Wette werden bei drei kombinierten Wetten etwa
+    15&nbsp;% – für die meisten Tipper ein sicheres Verlustgeschäft.
+  </p>
+  <p>
+    Deshalb gilt in meiner Kombi dieselbe Regel wie oben, nur strenger: Ein Spiel
+    kommt nur hinein, wenn ich es auch als Einzelwette spielen würde (meine
+    Einschätzung über der des Buchmachers) <em>und</em> der getippte Ausgang
+    mindestens 55&nbsp;% Wahrscheinlichkeit hat. Dann multipliziert sich statt der
+    Marge mein Vorsprung. Der Preis ist das Risiko: Zwei Beine mit je 65&nbsp;%
+    Trefferchance gewinnen zusammen nur noch in 42&nbsp;% der Fälle. Den Einsatz
+    (10 bis 100&nbsp;€ fiktiv) bestimmt dieselbe vorsichtige Einsatzformel – kommt
+    sie unter 10&nbsp;€ heraus, gilt die Kombi als nicht sicher genug und entfällt.
+    Die Kombi wird wie die Tipps versiegelt und erst enthüllt, wenn das letzte
+    ihrer Spiele angepfiffen ist – vorher würde sie die Tendenz noch versiegelter
+    Tipps verraten. Und findet sich kein Bein mit Vorsprung, gibt es schlicht
+    keine Kombi: Nicht zu wetten ist auch eine Entscheidung.
   </p>
 
   <h2>7. Die Kicktipp-Abgabe</h2>

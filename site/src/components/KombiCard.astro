@@ -8,7 +8,7 @@ const sealed = kombi.status === 'sealed';
 const result = kombi.result;
 const legs = kombi.legs ?? [];
 const money = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
-const possibleProfit = !sealed ? kombi.potential_payout_eur - kombi.stake_eur : null;
+const possibleProfit = sealed ? 0 : kombi.potential_payout_eur - kombi.stake_eur;
 ---
 
 <article class:list={['kombi-card', result?.outcome === 'won' ? 'is-win' : result?.outcome === 'lost' ? 'is-loss' : '']}>
@@ -83,7 +83,7 @@ const possibleProfit = !sealed ? kombi.potential_payout_eur - kombi.stake_eur : 
           ? result.outcome === 'won'
             ? `Alle ${legs.length} Beine haben gehalten: ${money.format(result.payout_eur)} Auszahlung auf ${money.format(result.stake_eur)} Einsatz.`
             : `Mindestens ein Bein hat nicht gehalten - bei einer Kombi ist damit der ganze Einsatz weg.`
-          : `Alle ${legs.length} Beine müssen gewinnen (90 Minuten). Jedes Bein hätte auch einzeln Value - nur dann kombiniert der Automat.`}
+          : `Alle ${legs.length} Beine müssen gewinnen (90 Minuten). Kombiniert wird nur, wenn der Automat jede einzelne Chance höher einschätzt, als die Quote sie bezahlt - Details unter „Wie ich denke".`}
       </p>
 
       {kombi.salt && kombi.hash && (
