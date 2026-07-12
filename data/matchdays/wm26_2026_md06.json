@@ -470,9 +470,150 @@
       "home": "Argentinien",
       "away": "Schweiz",
       "kickoff_utc": "2026-07-12T01:00:00Z",
-      "status": "sealed",
+      "status": "revealed",
       "hash": "4decc4d14247dba55f75392af2358219c7f95af3d57a54567b3b1c2d99a0853d",
-      "paper_bet_status": "sealed"
+      "paper_bet_status": "sealed",
+      "tip": [
+        2,
+        1
+      ],
+      "advance_tip": null,
+      "expected_points": 1.445,
+      "factors": {
+        "expected_goals": [
+          1.94,
+          1.02
+        ],
+        "probabilities": {
+          "home": 0.565,
+          "draw": 0.266,
+          "away": 0.168
+        },
+        "raw_probabilities": {
+          "home": 0.569,
+          "draw": 0.256,
+          "away": 0.175
+        },
+        "elo": {
+          "home": 2156.0,
+          "away": 1949.0,
+          "beta": 0.1845
+        },
+        "market": {
+          "home": 0.564,
+          "draw": 0.271,
+          "away": 0.166,
+          "weight": 0.7
+        },
+        "home_advantage": 0.0,
+        "trained_on_matches": 98,
+        "news_checked": 5,
+        "news_sources": {
+          "snippets": [
+            {
+              "title": "Andeutung von Messi-Trainer: „Probleme, von denen niemand mitbekommen hat“",
+              "description": "Messi Lionel, Nationalmannschaft Argentinien, Fußball, Fussball WM 2026, Fussball WM 2022, Aufmacher-Bereich",
+              "published": "2026-07-11T16:10:15+02:00",
+              "source": "bild",
+              "source_label": "BILD",
+              "url": "https://www.bild.de/sport/fussball/andeutung-von-messi-trainer-probleme-von-denen-niemand-mitbekommen-hat-6a51a73f36e98236c4bc4bde"
+            },
+            {
+              "title": "Das lässt aufhorchen: SV Elversberg trotzt Schweiz-Meister ein 1:1 ab",
+              "description": "SV Elversberg, Fußball, Saarland, zweite Bundesliga, erste Bundesliga, Sport - Leuchtturm Zentral",
+              "published": "2026-07-11T15:18:39+02:00",
+              "source": "bild",
+              "source_label": "BILD",
+              "url": "https://www.bild.de/sport/fussball/das-laesst-aufhorchen-sv-elversberg-trotzt-schweiz-meister-ein-1-1-ab-6a522d1e845f54689a59595e"
+            },
+            {
+              "title": "WM 2026: Darum darf Messi weiter Elfer schießen",
+              "description": "Messi Lionel, Nationalmannschaft Argentinien, Fußball, Fussball WM 2022, Fussball WM 2026, Elfmeter, Aufmacher-Bereich",
+              "published": "2026-07-11T10:40:39+02:00",
+              "source": "bild",
+              "source_label": "BILD",
+              "url": "https://www.bild.de/sport/fussball/wm-2026-darum-darf-messi-weiter-elfer-schiessen-6a51e9e646b077e883d97216"
+            },
+            {
+              "title": "WM 2026: Star Jaminton Campaz traut sich nach Morddrohungen nicht mehr nach Hause",
+              "description": "Fussball WM 2026, Fußball, Nationalmannschaft Kolumbien, Kolumbien, Nationalmannschaft Schweiz, Aufmacher-Bereich, super-a-teaser",
+              "published": "2026-07-11T05:30:23+02:00",
+              "source": "bild",
+              "source_label": "BILD",
+              "url": "https://www.bild.de/sport/fussball/wm-2026-morddrohungen-wm-star-traut-sich-nicht-mehr-zurueck-nach-kolumbien-6a514ee74c65dbb4ac8fde6f"
+            },
+            {
+              "title": "Bei Messi-Wahnsinn: Kurioses Public Viewing im Flugzeug",
+              "description": "WM News Show, Fussball WM, Messi Lionel, Nationalmannschaft Argentinien, clipout",
+              "published": "2026-07-10T22:09:36+02:00",
+              "source": "bild",
+              "source_label": "BILD",
+              "url": "https://www.bild.de/sport/fussball/bei-messi-wahnsinn-kurioses-public-viewing-im-flugzeug-6a50d54b36e98236c4bc3f9d"
+            }
+          ],
+          "checked": 3,
+          "sources": [
+            {
+              "source": "kicker",
+              "label": "Kicker",
+              "checked": true,
+              "matches": 0
+            },
+            {
+              "source": "sportschau",
+              "label": "Sportschau",
+              "checked": true,
+              "matches": 2
+            },
+            {
+              "source": "bild",
+              "label": "BILD",
+              "checked": true,
+              "matches": 9
+            }
+          ],
+          "total_matches": 11,
+          "returned": 5,
+          "has_news": true
+        },
+        "llm_adjustment": null
+      },
+      "begruendung": "Argentinien geht als klarer Favorit in dieses Viertelfinale gegen die Schweiz, das liegt auf der Hand. Mein Tipp für dieses Spiel ist ein 2:1-Sieg für Argentinien, und das ist auch der ausgewählte Tipp für Kicktipp. Die Buchmacherquoten und die ELO-Bewertungen sprechen eine deutliche Sprache, Argentinien hat einfach mehr Feuerpower. Es wird nicht ein Torfestival, aber Argentinien sollte ihre Überlegenheit nutzen können, um das Spiel zu gewinnen. Die Schweiz wird sich sicherlich nicht kampflos ergeben, aber am Ende sollte Argentinien ihre klare Überlegenheit durchsetzen können.",
+      "shadow_tips": {
+        "most_probable": [
+          1,
+          1
+        ],
+        "elo_favorite": [
+          2,
+          1
+        ],
+        "always_draw": [
+          1,
+          1
+        ]
+      },
+      "paper_bet": {
+        "mode": "paper",
+        "market": "h2h_90min",
+        "selection": "home",
+        "selection_label": "Argentinien gewinnt",
+        "status": "skipped_no_value",
+        "source": "tipico_de",
+        "source_label": "Tipico",
+        "bookmaker_count": 25,
+        "odds_decimal": 1.67,
+        "model_probability": 0.5692,
+        "implied_probability": 0.5988,
+        "edge": -0.0495,
+        "expected_value_eur": -0.0,
+        "stake_eur": 0.0,
+        "max_stake_eur": 100.0,
+        "kelly_fraction": 0.0,
+        "applied_kelly_fraction": 0.25,
+        "bankroll_eur": 1000.0
+      },
+      "salt": "69efb44dc8fccd29a4c21c09205dd85c"
     }
   ]
 }
