@@ -16,9 +16,147 @@
       "home": "Frankreich",
       "away": "Spanien",
       "kickoff_utc": "2026-07-14T19:00:00Z",
-      "status": "sealed",
+      "status": "revealed",
       "hash": "d6b68a1cba18ce3b64d55d6878787d5f452bbd04979c705e51232371b24c3ab2",
-      "paper_bet_status": "sealed"
+      "paper_bet_status": "sealed",
+      "tip": [
+        2,
+        1
+      ],
+      "advance_tip": null,
+      "expected_points": 1.019,
+      "factors": {
+        "expected_goals": [
+          1.34,
+          1.19
+        ],
+        "probabilities": {
+          "home": 0.373,
+          "draw": 0.327,
+          "away": 0.3
+        },
+        "raw_probabilities": {
+          "home": 0.31,
+          "draw": 0.382,
+          "away": 0.308
+        },
+        "elo": {
+          "home": 2163.0,
+          "away": 2190.0,
+          "beta": 0.1841
+        },
+        "market": {
+          "home": 0.399,
+          "draw": 0.304,
+          "away": 0.296,
+          "weight": 0.7
+        },
+        "home_advantage": 0.0,
+        "trained_on_matches": 100,
+        "news_checked": 5,
+        "news_sources": {
+          "snippets": [
+            {
+              "title": "\"Olise ist der neue Zidane\": Französische Fans voller Selbstbewusstsein",
+              "description": "Bei der EM schaltete Spanien Frankreich im Halbfinale aus, nun will die Equipe Tricolore Revanche nehmen und das Final-Ticket buchen. Die angereisten Fans stimmten sich in Dallas auf die Partie mit Gesängen und der Nationalhymne ein.",
+              "published": "2026-07-14T13:29:27+00:00",
+              "source": "kicker",
+              "source_label": "Kicker"
+            },
+            {
+              "title": "WM-Halbfinale Frankreich gegen Spanien: Alle Infos zu Übertragung und Co.",
+              "description": "Im ersten Halbfinale der WM treffen Frankreich und Spanien aufeinander. Von Anstoßzeit bis TV-Übertragung - hier gibt es alle Informationen.",
+              "published": "2026-07-14T14:29:52+02:00",
+              "source": "sportschau",
+              "source_label": "Sportschau"
+            },
+            {
+              "title": "Titelfavorit Frankreich gegen Europameister Spanien: Kannst du das Puzzle lösen?",
+              "description": "An diesem Dienstag steigt das erste Halbfinale der Fußball-Weltmeisterschaft 2026. Dort treffen die mit Stars gespickten Teams aus Frankreich und Spanien aufeinander. Bereits im EM-Halbfinale 2024 gab es das Duell der beiden Teams, damals gewann Spanien durch einen Schlenzer von Wunderkind Lamine Yamal mit 2:1.",
+              "published": "2026-07-14T11:30:00+00:00",
+              "source": "kicker",
+              "source_label": "Kicker"
+            },
+            {
+              "title": "Spanischer Drogendealer flieht von der Polizei über die Dächer – im Video",
+              "description": "Team First, super-a-teaser, Dealer, Spanien, Polizei, Festnahme, Kokain, Heroin, Drogen, Razzia, Flucht, seo-optimierung-werkstudenten",
+              "published": "2026-07-14T12:28:01+02:00",
+              "source": "bild",
+              "source_label": "BILD",
+              "url": "https://www.bild.de/news/ausland/spanischer-drogendealer-flieht-von-der-polizei-ueber-die-daecher-im-video-6a55edcb04bf7e616bda7e6e"
+            },
+            {
+              "title": "Lamine Yamal spricht über den Rassismus-Eklat bei der WM",
+              "description": "Fußball, Nationalmannschaft Spanien, FC Barcelona, Fussball EM 2024, Nationalmannschaft Frankreich, TorAlarm Top-News",
+              "published": "2026-07-14T11:14:14+02:00",
+              "source": "bild",
+              "source_label": "BILD",
+              "url": "https://www.bild.de/sport/fussball/lamine-yamal-spricht-ueber-den-rassismus-eklat-bei-der-wm-6a55e0f4d9d21346a288c12a"
+            }
+          ],
+          "checked": 3,
+          "sources": [
+            {
+              "source": "kicker",
+              "label": "Kicker",
+              "checked": true,
+              "matches": 2
+            },
+            {
+              "source": "sportschau",
+              "label": "Sportschau",
+              "checked": true,
+              "matches": 7
+            },
+            {
+              "source": "bild",
+              "label": "BILD",
+              "checked": true,
+              "matches": 18
+            }
+          ],
+          "total_matches": 27,
+          "returned": 5,
+          "has_news": true
+        },
+        "llm_adjustment": null
+      },
+      "begruendung": "Ich tippe auf ein 2:1 für Frankreich, und das ist auch nicht ganz unverdient, wenn man sich die erwarteten Tore ansieht - Frankreich kommt auf 1.34 Tore, während Spanien auf 1.19 kommt. Es sieht also nach einem klaren Favoriten aus, aber mit einem kleinen Vorteil für die Franzosen. Die ELO-Bewertung zeigt, dass Spanien leicht favorisiert ist, aber die Buchmacherquoten sagen etwas anderes - hier sind die Chancen fast gleich verteilt. Es wird also eine enge Kiste, bei der jede Mannschaft ihre Chancen hat, aber ich denke, Frankreich hat die Nase leicht vorne.",
+      "shadow_tips": {
+        "most_probable": [
+          1,
+          1
+        ],
+        "elo_favorite": [
+          1,
+          2
+        ],
+        "always_draw": [
+          1,
+          1
+        ]
+      },
+      "paper_bet": {
+        "mode": "paper",
+        "market": "h2h_90min",
+        "selection": "home",
+        "selection_label": "Frankreich gewinnt",
+        "status": "skipped_no_value",
+        "source": "tipico_de",
+        "source_label": "Tipico",
+        "bookmaker_count": 24,
+        "odds_decimal": 2.35,
+        "model_probability": 0.3102,
+        "implied_probability": 0.4255,
+        "edge": -0.271,
+        "expected_value_eur": -0.0,
+        "stake_eur": 0.0,
+        "max_stake_eur": 100.0,
+        "kelly_fraction": 0.0,
+        "applied_kelly_fraction": 0.25,
+        "bankroll_eur": 1000.0
+      },
+      "salt": "73ffbeb5f47089aece45feb206e58be9"
     }
   ]
 }
