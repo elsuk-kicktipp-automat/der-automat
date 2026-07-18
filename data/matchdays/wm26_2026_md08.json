@@ -16,9 +16,148 @@
       "home": "Frankreich",
       "away": "England",
       "kickoff_utc": "2026-07-18T21:00:00Z",
-      "status": "sealed",
+      "status": "revealed",
       "hash": "d03075864f42f14b6fd5cf4829c383fbbc9e3f732a15ef12a783cc1c5be490f6",
-      "paper_bet_status": "sealed"
+      "paper_bet_status": "sealed",
+      "tip": [
+        2,
+        1
+      ],
+      "advance_tip": null,
+      "expected_points": 1.29,
+      "factors": {
+        "expected_goals": [
+          2.01,
+          1.39
+        ],
+        "probabilities": {
+          "home": 0.5,
+          "draw": 0.259,
+          "away": 0.241
+        },
+        "raw_probabilities": {
+          "home": 0.455,
+          "draw": 0.313,
+          "away": 0.232
+        },
+        "elo": {
+          "home": 2121.0,
+          "away": 2074.0,
+          "beta": 0.1838
+        },
+        "market": {
+          "home": 0.52,
+          "draw": 0.236,
+          "away": 0.245,
+          "weight": 0.7
+        },
+        "home_advantage": 0.0,
+        "trained_on_matches": 102,
+        "news_checked": 5,
+        "news_sources": {
+          "snippets": [
+            {
+              "title": "Sehen Sie es wie Trump?: US-Präsident völlig verwirrt wegen Kane",
+              "description": "Fussball WM, Trump Donald, Thomas Tuchel, England, Harry Kane",
+              "published": "2026-07-18T18:14:42+02:00",
+              "source": "bild",
+              "source_label": "BILD",
+              "url": "https://www.bild.de/sport/fussball/us-praesident-sieht-den-fehler-trump-zerlegt-tuchel-nach-england-aus-6a5b221e340ecb5e694f54bb"
+            },
+            {
+              "title": "Frankreich gegen England: Wo läuft die Fußball-WM heute?",
+              "description": "Fußball, Fussball WM 2026, Nationalmannschaft Frankreich, Nationalmannschaft Argentinien, Messi Lionel, Nationalmannschaft England, Nationalmannschaft Spanien, WM, Magenta Sport, Live-Ticker, sport-standard, no-sport-app, Aufmacher-Bereich",
+              "published": "2026-07-18T18:14:39+02:00",
+              "source": "bild",
+              "source_label": "BILD",
+              "url": "https://www.bild.de/sport/fussball/frankreich-gegen-england-wo-laeuft-die-fussball-wm-heute-6a5ba18761b8a80211aaac99"
+            },
+            {
+              "title": "Übertragung, Anstoßzeit, Preis: Alle Infos zum Spiel um Platz 3",
+              "description": "Im Spiel um Platz 3 der Fußball-WM trifft England auf Frankreich. Alle Infos zur Übertragung, Ablauf und Preisen gibt es im FAQ.",
+              "published": "2026-07-18T18:10:38+02:00",
+              "source": "sportschau",
+              "source_label": "Sportschau"
+            },
+            {
+              "title": "Spanien vor WM-Finale - Alejandro Grimaldo nur Dauerreservist hinter Cucurella",
+              "description": "Wie stark Spaniens Kader ist, zeigt sich auf der Bank. Edeltechniker Alejandro Grimaldo hat noch keine Minute gespielt - wie auch aktuelle Meister aus England und Spanien.",
+              "published": "2026-07-18T16:25:53+02:00",
+              "source": "sportschau",
+              "source_label": "Sportschau"
+            },
+            {
+              "title": "Frankreich gegen England: Spiel um Platz 3 heute erst sehr spät!",
+              "description": "WM, Fußball, Fussball WM 2026, Nationalmannschaft Argentinien, Nationalmannschaft Frankreich, Nationalmannschaft England, Nationalmannschaft Spanien, Kylian Mbappé, Harry Kane, Aufmacher-Bereich, super-a-teaser",
+              "published": "2026-07-18T15:42:33+02:00",
+              "source": "bild",
+              "source_label": "BILD",
+              "url": "https://www.bild.de/sport/fussball/frankreich-gegen-england-spiel-um-platz-3-heute-erst-sehr-spaet-6a5b46edc72232627649a299"
+            }
+          ],
+          "checked": 3,
+          "sources": [
+            {
+              "source": "kicker",
+              "label": "Kicker",
+              "checked": true,
+              "matches": 1
+            },
+            {
+              "source": "sportschau",
+              "label": "Sportschau",
+              "checked": true,
+              "matches": 3
+            },
+            {
+              "source": "bild",
+              "label": "BILD",
+              "checked": true,
+              "matches": 24
+            }
+          ],
+          "total_matches": 28,
+          "returned": 5,
+          "has_news": true
+        },
+        "llm_adjustment": null
+      },
+      "begruendung": "Frankreich ist der klare Favorit in diesem Finale, die Buchmacher sehen sie mit 52% Siegchance klar vorne. Mein Tipp für dieses Spiel ist ein 2:1-Sieg für die Franzosen. Es wird ein torreiches Spiel, ein richtiges Torfestival, da Frankreich im Durchschnitt 2,01 Tore erwartet und England 1,39. Die ELO-Bewertung unterstreicht auch die Überlegenheit der Franzosen, sie liegen mit 2121 Punkten vor England, das 2074 Punkte hat. Es wird aber keine leichte Beute für Frankreich, England ist ein starker Gegner und wird nicht ohne Kampf aufgeben, es wird ein hartes Duell auf Augenhöhe, bei dem Frankreichs Qualität am Ende den Ausschlag geben könnte.",
+      "shadow_tips": {
+        "most_probable": [
+          1,
+          1
+        ],
+        "elo_favorite": [
+          2,
+          1
+        ],
+        "always_draw": [
+          1,
+          1
+        ]
+      },
+      "paper_bet": {
+        "mode": "paper",
+        "market": "h2h_90min",
+        "selection": "home",
+        "selection_label": "Frankreich gewinnt",
+        "status": "skipped_no_value",
+        "source": "tipico_de",
+        "source_label": "Tipico",
+        "bookmaker_count": 24,
+        "odds_decimal": 1.8,
+        "model_probability": 0.4551,
+        "implied_probability": 0.5556,
+        "edge": -0.1808,
+        "expected_value_eur": -0.0,
+        "stake_eur": 0.0,
+        "max_stake_eur": 100.0,
+        "kelly_fraction": 0.0,
+        "applied_kelly_fraction": 0.25,
+        "bankroll_eur": 1000.0
+      },
+      "salt": "b1490407a43102f3b98b3415621e7de7"
     }
   ]
 }
