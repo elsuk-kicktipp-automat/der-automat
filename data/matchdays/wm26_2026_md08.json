@@ -158,6 +158,14 @@
         "bankroll_eur": 1000.0
       },
       "salt": "b1490407a43102f3b98b3415621e7de7"
+    },
+    {
+      "home": "Spanien",
+      "away": "Argentinien",
+      "kickoff_utc": "2026-07-19T19:00:00Z",
+      "status": "sealed",
+      "hash": "43a7317b9d7eb51140f74d50c4e990513d3206381e6e5c6f95f5c0c1767a0ebb",
+      "paper_bet_status": "sealed"
     }
   ]
 }
