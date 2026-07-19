@@ -163,9 +163,149 @@
       "home": "Spanien",
       "away": "Argentinien",
       "kickoff_utc": "2026-07-19T19:00:00Z",
-      "status": "sealed",
+      "status": "revealed",
       "hash": "43a7317b9d7eb51140f74d50c4e990513d3206381e6e5c6f95f5c0c1767a0ebb",
-      "paper_bet_status": "sealed"
+      "paper_bet_status": "sealed",
+      "tip": [
+        2,
+        1
+      ],
+      "advance_tip": null,
+      "expected_points": 1.13,
+      "factors": {
+        "expected_goals": [
+          1.41,
+          1.07
+        ],
+        "probabilities": {
+          "home": 0.418,
+          "draw": 0.325,
+          "away": 0.257
+        },
+        "raw_probabilities": {
+          "home": 0.424,
+          "draw": 0.343,
+          "away": 0.233
+        },
+        "elo": {
+          "home": 2232.0,
+          "away": 2200.0,
+          "beta": 0.1787
+        },
+        "market": {
+          "home": 0.416,
+          "draw": 0.317,
+          "away": 0.267,
+          "weight": 0.7
+        },
+        "home_advantage": 0.0,
+        "trained_on_matches": 103,
+        "news_checked": 5,
+        "news_sources": {
+          "snippets": [
+            {
+              "title": "Showdown beim WM-Finale: So will Trump die FIFA weiter beeinflussen",
+              "description": "Team First, Trump Donald, WM, Infantino Gianni, Korruption, Kanada, Spanien, Streit, Global Reporter, Fussball WM 2026, Fussball WM",
+              "published": "2026-07-19T17:35:18+02:00",
+              "source": "bild",
+              "source_label": "BILD",
+              "url": "https://www.bild.de/sport/fussball/showdown-beim-wm-finale-so-will-trump-die-fifa-weiter-beeinflussen-6a5cb3d1ae8f7851eb5f06c5"
+            },
+            {
+              "title": "WM 2026: Final-Schiri Slavko Vincic wurde vor sechs Jahren auf Sex-Party verhaftet",
+              "description": "Champions League, Fußball, Schiedsrichter, Nationalmannschaft Spanien, Nationalmannschaft Argentinien, Fussball WM, Fussball WM 2026, Aufmacher-Bereich",
+              "published": "2026-07-19T17:25:24+02:00",
+              "source": "bild",
+              "source_label": "BILD",
+              "url": "https://www.bild.de/sport/fussball/wm-2026-final-schiri-slavko-vincic-wurde-vor-sechs-jahren-auf-sex-party-verhaftet-6a5b5fed340ecb5e694f5816"
+            },
+            {
+              "title": "Lothar Matthäus tippt den Weltmeister!",
+              "description": "Fußball, Fussball WM 2026, Nationalmannschaft Spanien, Nationalmannschaft Argentinien, Messi Lionel, super-a-teaser, Aufmacher-Bereich, Sport - Leuchtturm München",
+              "published": "2026-07-19T17:24:28+02:00",
+              "source": "bild",
+              "source_label": "BILD",
+              "url": "https://www.bild.de/sport/fussball/lothar-matthaeus-tippt-den-weltmeister-6a5a3c76bb3fbf9dba987e70"
+            },
+            {
+              "title": "Countdown zum WM-Finale: Capdevila und der kicker unterwegs - Ikea macht früher dicht",
+              "description": "Heute ist es soweit, im Metlife Stadium in New York steigt das WM-Finale zwischen Spanien und Argentinien. Bis zum Anpfiff um 21 Uhr gibt es im Countdown alles rund um das Endspiel zum Nachlesen.",
+              "published": "2026-07-19T14:59:06+00:00",
+              "source": "kicker",
+              "source_label": "Kicker"
+            },
+            {
+              "title": "WM-Finale 2026: Diese 19 Fakten müssen Sie zu Spanien - Argentinien kennen",
+              "description": "Fussball WM 2026, Messi Lionel, Fußball, Nationalmannschaft Argentinien, Aufmacher-Bereich, super-a-teaser, quad-teaser, TorAlarm Top-News",
+              "published": "2026-07-19T16:21:22+02:00",
+              "source": "bild",
+              "source_label": "BILD",
+              "url": "https://www.bild.de/sport/fussball/wm-finale-2026-diese-19-fakten-muessen-sie-zu-spanien-argentinien-kennen-6a59d806c72232627649923a"
+            }
+          ],
+          "checked": 3,
+          "sources": [
+            {
+              "source": "kicker",
+              "label": "Kicker",
+              "checked": true,
+              "matches": 2
+            },
+            {
+              "source": "sportschau",
+              "label": "Sportschau",
+              "checked": true,
+              "matches": 7
+            },
+            {
+              "source": "bild",
+              "label": "BILD",
+              "checked": true,
+              "matches": 29
+            }
+          ],
+          "total_matches": 38,
+          "returned": 5,
+          "has_news": true
+        },
+        "llm_adjustment": null
+      },
+      "begruendung": "Ich tippe auf einen knappen 2:1-Sieg für Spanien, und das nicht ohne Grund. Die Spanier gehen als klarer Favorit in dieses Finale, ihre Überlegenheit ist deutlich spürbar. Das Duell zwischen Spanien und Argentinien verspricht ein Torfestival, bei dem die Spanier mit 1,41 erwarteten Toren leicht die Oberhand haben. Die ELO-Bewertung bestätigt diesen klaren Vorteil, Spanien liegt mit 2232 Punkten deutlich vor Argentinien mit 2200 Punkten. Es wird ein offenes Spiel, bei dem beide Teams ihre Stärken ausspielen werden, aber letztendlich sollten die Spanier ihre Qualität durchsetzen können.",
+      "shadow_tips": {
+        "most_probable": [
+          1,
+          1
+        ],
+        "elo_favorite": [
+          2,
+          1
+        ],
+        "always_draw": [
+          1,
+          1
+        ]
+      },
+      "paper_bet": {
+        "mode": "paper",
+        "market": "h2h_90min",
+        "selection": "home",
+        "selection_label": "Spanien gewinnt",
+        "status": "skipped_no_value",
+        "source": "tipico_de",
+        "source_label": "Tipico",
+        "bookmaker_count": 25,
+        "odds_decimal": 2.25,
+        "model_probability": 0.4238,
+        "implied_probability": 0.4444,
+        "edge": -0.0464,
+        "expected_value_eur": -0.0,
+        "stake_eur": 0.0,
+        "max_stake_eur": 100.0,
+        "kelly_fraction": 0.0,
+        "applied_kelly_fraction": 0.25,
+        "bankroll_eur": 1000.0
+      },
+      "salt": "6ec4fa35e7dd964d53273b7eb3664731"
     }
   ]
 }
